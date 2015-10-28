@@ -1,0 +1,47 @@
+---
+
+# Configurations goes here
+
+script:
+  - npm install
+
+# Hosts that you want to ignore
+whitelist:
+  - 10.0.2.2 # Virtualbox host machine's address
+  - registry.npmjs.org
+
+# Directories that you want to include or exclude from the inspection
+directories:
+  excluded:
+    - /dev
+    - /lost+found
+    - /media
+    - /mnt
+    - /proc
+    - /run
+    - /sys
+    - /tmp
+    - /vagrant
+    - /var/lock
+    - /var/run
+    - /var/tmp
+    - /var/log
+    - /backup
+    - /evidence
+    - /home/vagrant/tmp_runCommands.sh
+    - /home/vagrant/repo
+    - /home/vagrant/.npm
+  included:
+    - /bin
+    - /boot
+    - /etc
+    - /home
+    - /lib
+    - /opt
+    - /root
+    - /sbin
+    - /selinux
+    - /srv
+    - /usr
+    - /var
+
