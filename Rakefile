@@ -18,7 +18,7 @@ namespace :v do
   end
 
   desc 'Equivalent to a `vagrant halt && vagrant up`'
-  task reload: [:halt, :up] do
+  task :reload do
     `vagrant reload`
   end
 end
