@@ -4,6 +4,7 @@ require 'resolv'
 require './vagrant_whisperer'
 require './packet_inspector'
 require './inspect_config'
+require './utils'
 
 options = {
   :duration => 15,
@@ -51,15 +52,19 @@ File.open filelist, 'w' do |f|
 end
 $whisperer.sendFile(filelist, filelist_remote_path)
 
+get_proc = 'get_processes_job.rb'
+$whisperer.sendFile(get_proc, File.join(VagrantWhisperer::HOME, get_proc))
+
 # Add repo to backup so we can diff later
 commands << 'echo Preparing file system snapshot ...'
 commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{VagrantWhisperer::BACKUP_DIR}"
 
-# Record all processes to diff later
-commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-before.txt"
-
 commands << 'echo "Starting network monitoring ..."'
 commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 &disown"
+
+commands << "ruby #{File.join(VagrantWhisperer::HOME, get_proc)} &disown"
+
+commands << 'sleep 1'
 
 # script can be a string or an array of strings
 commands = (commands + [$config.script]).flatten
@@ -67,7 +72,7 @@ commands = (commands + [$config.script]).flatten
 $whisperer.runCommands(commands)
 
 commands.clear
-commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-after.txt"
+commands << 'pkill ruby'
 commands << 'sudo pkill tcpdump'
 get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::BACKUP_DIR} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
 commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
@@ -76,7 +81,11 @@ commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e;
 $whisperer.runCommands(commands)
 
 puts 'Zipping and downloading evidences from vagrant image...'
-$whisperer.collectEvidence(filename = repo_name)
+include Utils
+zipfile = "#{timestamp}-#{repo_name}-evidence.zip"
+$local_evidence_dir = zipfile.chomp '.zip'
+$whisperer.collectEvidence(into = zipfile)
+unzip zipfile, $local_evidence_dir
 
 KILOBYTE = 1024.0
 
@@ -86,9 +95,7 @@ def prettify(size)
 end
 
 def print_outgoing_connections
-  puts 'Downloading pcap file from vagrant image...'
-  pcap_file = 'evidence.pcap'
-  $whisperer.getFile "#{VagrantWhisperer::EVIDENCE_DIR}/#{pcap_file}"
+  pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
 
   vagrant_ip = $whisperer.ip_address
   packet_inspector = PacketInspector.new pcap_file
@@ -123,13 +130,26 @@ def print_outgoing_connections
 end
 
 def print_fs_changes
-  diff_file = 'fs-diff-with-changes.txt'
-  $whisperer.getFile "#{VagrantWhisperer::EVIDENCE_DIR}/#{diff_file}"
+  diff_file = File.join($local_evidence_dir, 'evidence', 'fs-diff-with-changes.txt')
   File.foreach(diff_file) { |x| puts x }
+end
+
+def print_processes
+  ps_dir = File.join($local_evidence_dir, 'evidence', 'ps')
+  procs = []
+  Dir.foreach(ps_dir) do |filename|
+    next if filename == '.' || filename == '..'
+    contents = YAML.load_file(File.join(ps_dir, filename))
+    procs << contents if contents
+  end
+  return if procs.empty?
+  puts 'The following processes were running during the build:'
+  procs.flatten.each { |p| puts p }
 end
 
 print_outgoing_connections
 print_fs_changes
+print_processes
 
 # diff ps
 

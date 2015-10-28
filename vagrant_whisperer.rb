@@ -1,4 +1,8 @@
+require './utils'
+
 class VagrantWhisperer
+  include Utils
+
   HOME = '/home/vagrant'
   REPO_DIR = "#{HOME}/repo"
   EVIDENCE_DIR = "/evidence"
@@ -30,12 +34,10 @@ class VagrantWhisperer
     `vagrant ssh --command "rm #{dest_path}"`
   end
 
-  def collectEvidence(filename = '')
-    timestamp = Time.now.strftime('%Y%m%d%H%M%S')
-    evidence_zip_filename = "#{timestamp}-#{filename}-evidence.zip"
-    evidence_zip_path = "#{HOME}/#{evidence_zip_filename}"
+  def collectEvidence(into = "#{timestamp}-evidence.zip")
+    evidence_zip_path = "#{HOME}/#{into}"
 
-    zip EVIDENCE_DIR, into = evidence_zip_path
+    zip(EVIDENCE_DIR, into = evidence_zip_path)
 
     getFile(evidence_zip_path)
   end
@@ -69,7 +71,7 @@ class VagrantWhisperer
     ssh_opts = {}
     config.lines.map(&:strip).each do |e|
       next if e.empty?
-      k,v = e.split(/\s+/)
+      k, v = e.split(/\s+/)
       ssh_opts[k] = v
     end
 

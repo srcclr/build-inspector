@@ -6,12 +6,14 @@ GEM
       network_interface (~> 0.0)
       pcaprub (~> 0.12)
     pcaprub (0.12.0)
+    rubyzip (1.1.7)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   packetfu
+  rubyzip
 
 BUNDLED WITH
    1.10.6
