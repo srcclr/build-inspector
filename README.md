@@ -47,7 +47,7 @@ vagrant sandbox rollback
 ## Usage
 
 ```
-Usage profiler.rb [options] <git repo URL> <build command>
+Usage inspector.rb [options] <git repo URL>
     -h, --help                       Display this screen
     -d, --duration #                 Wait this long after building before stopping, in minutes, default=15
 ```
@@ -56,7 +56,7 @@ Usage profiler.rb [options] <git repo URL> <build command>
 
 ```
 cp configs/gradle_inspect.yml .inspect.yml
-ruby profiler.rb https://github.com/jsyeo/TotallyLegitApp.git
+ruby inspector.rb https://github.com/jsyeo/TotallyLegitApp.git
 ```
 
 The above project has a task called `backdoor` that adds a reverse connect shell to `~/.bashrc`.
