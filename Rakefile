@@ -17,6 +17,13 @@ namespace :v do
     `vagrant up`
   end
 
+  task :destroy do
+    `vagrant destroy`
+  end
+
+  desc 'Equivalent to a `vagrant destroy && vagrant up`'
+  task refresh: [:destroy, :up]
+
   desc 'Equivalent to a `vagrant halt && vagrant up`'
   task :reload do
     `vagrant reload`
