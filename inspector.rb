@@ -144,7 +144,9 @@ def print_processes
   end
   return if procs.empty?
   puts 'The following processes were running during the build:'
-  procs.flatten.each { |p| puts p }
+  procs.flatten.each do |proc|
+    puts "  - #{proc}"
+  end
 end
 
 print_outgoing_connections
