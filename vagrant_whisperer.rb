@@ -30,8 +30,6 @@ class VagrantWhisperer
     IO.popen(args) do |f|
       puts f.gets until f.eof?
     end
-
-    `vagrant ssh --command "rm #{dest_path}"`
   end
 
   def collectEvidence(into = "#{timestamp}-evidence.zip")
