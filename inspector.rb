@@ -51,6 +51,7 @@ File.open filelist, 'w' do |f|
   f.write($config.filelist.gsub(/\$HOME/, $whisperer.home))
 end
 $whisperer.sendFile(filelist, filelist_remote_path)
+`rm #{filelist}`
 
 get_proc = 'get_processes_job.rb'
 remote_get_proc = File.join($whisperer.home, get_proc)
