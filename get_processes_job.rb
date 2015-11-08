@@ -22,5 +22,5 @@ end
 job = GetProcessesJob.new
 job.start
 `mkdir /evidence/ps/`
-# hack to ensure the script doesn't quit
+# HACK: to ensure the script doesn't quit
 loop {}
