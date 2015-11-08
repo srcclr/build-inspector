@@ -7,7 +7,7 @@ require './inspect_config'
 require './utils'
 
 options = {
-  :duration => 15,
+  rollback: true
 }
 
 optparse = OptionParser.new do |opts|
@@ -17,9 +17,9 @@ optparse = OptionParser.new do |opts|
     exit
   end
 
-  opts.on('-d', '--duration #', Integer,
-          "Wait this long after building before stopping, in minutes, default=#{options[:duration]}") do |duration|
-    options[:duration] = duration * 60
+  opts.on('-n', '--no-rollback #',
+          "Don't rollback the virtual machine's state after running") do
+    options[:rollback] = false
   end
 end
 
@@ -153,9 +153,4 @@ print_outgoing_connections
 print_fs_changes
 print_processes
 
-# diff ps
-
-# diff fs
-
-# TODO: not yet, maybe make optional
-#commands << "vagrant destroy"
+`vagrant sandbox rollback` if options[:rollback]
