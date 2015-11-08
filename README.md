@@ -13,8 +13,7 @@ compromising the developer's machine.
 - [Vagrant](https://www.vagrantup.com/)
 
 Once you have both ruby and vagrant installed, go ahead and install
-the sahara plugin and bundler. Lastly, clone this repository and pull
-in the project's dependencies.
+the sahara plugin, bundler and this project's dependencies.
 
 ```
 vagrant plugin install sahara
