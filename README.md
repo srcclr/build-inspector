@@ -25,7 +25,7 @@ bundle install
 ## Running
 
 First, make sure that you have the
-[requirements](https://github.com/srcclr/build-inspector#Requirements)
+[requirements](https://github.com/srcclr/build-inspector#requirements)
 and you are inside the repository's directory.
 
 ```
