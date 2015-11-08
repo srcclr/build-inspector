@@ -1,6 +1,6 @@
 # Build Inspector
 
-[Build Inspector](https://github.com/sourceclear/build_inspector) is a
+[Build Inspector](https://github.com/srcclr/build-inspector) is a
 tool that gives insight into what's happening when you're building a
 project. It is language and build system agnostic and it is capable of
 inspecting network activities, file system changes and running
@@ -18,7 +18,7 @@ in the project's dependencies.
 
 ```
 vagrant plugin install sahara
-git clone https://github.com/sourceclear/build_inspector
+git clone https://github.com/srcclr/build-inspector
 gem install bundler
 bundle install
 ```
@@ -26,7 +26,7 @@ bundle install
 ## Running
 
 First, make sure that you have the
-[requirements](https://github.com/sourceclear/build_inspector#Requirements)
+[requirements](https://github.com/srcclr/build-inspector#Requirements)
 and you are inside the repository's directory.
 
 ```
