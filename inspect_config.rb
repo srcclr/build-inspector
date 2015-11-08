@@ -4,7 +4,7 @@ class InspectConfig
   CONFIG = '.inspect.yml'
 
   def initialize
-    @config = YAML.load_file(CONFIG)if File.exist? CONFIG
+    @config = YAML.load_file(CONFIG) if File.exist? CONFIG
     @config ||= {}
     @config['directories'] ||= {}
     @excluded = @config['directories'].fetch('excluded', [])
