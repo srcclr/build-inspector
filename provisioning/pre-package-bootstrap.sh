@@ -1,8 +1,8 @@
 mv ~/sources.list /etc/apt/sources.list
 mv ~/sshd /etc/pam.d/sshd
 
-echo 'GEM_HOME="/home/vagrant/.gem"' >> /etc/environment
-echo 'PATH="$HOME/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"' >> /etc/enviroment
+echo GEM_HOME="$HOME/.gem" >> /etc/environment
+echo PATH="$HOME/.gem/ruby/2.2.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games" >> /etc/environment
 
 echo "Stopping puppet and chef"
 service puppet stop
