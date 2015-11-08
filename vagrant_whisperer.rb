@@ -3,10 +3,9 @@ require './utils'
 class VagrantWhisperer
   include Utils
 
-  HOME = '/home/vagrant'
-  REPO_DIR = "#{HOME}/repo"
-  EVIDENCE_DIR = "/evidence"
-  BACKUP_DIR = "/backup"
+  EVIDENCE_DIR = '/evidence'
+  BACKUP_DIR = '/backup'
+  TMP_DIR = '/tmp'
 
   def initialize
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
@@ -14,7 +13,7 @@ class VagrantWhisperer
 
   def runCommands(commands)
     file_path = 'tmp_runCommands.sh'
-    dest_path = "#{HOME}/#{file_path}"
+    dest_path = File.join TMP_DIR, file_path
     commands.unshift "#!/bin/bash"
     commands << "rm #{dest_path}"
 
@@ -26,14 +25,31 @@ class VagrantWhisperer
 
     # Stream output as we get it
     $stdout.sync = true
-    args = ['vagrant', 'ssh', '--command', "./#{file_path}"]
+    args = ['vagrant', 'ssh', '--command', "#{dest_path}"]
     IO.popen(args) do |f|
       puts f.gets until f.eof?
     end
   end
 
+  def run_and_get(commands)
+    file_path = 'tmp_runCommands.sh'
+    dest_path = File.join TMP_DIR, file_path
+    commands.unshift "#!/bin/bash"
+    commands << "rm #{dest_path}"
+
+    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write "#{cmd}\n" } }
+    sendFile(file_path, dest_path)
+    File.delete(file_path)
+
+    `vagrant ssh --command "chmod +x #{dest_path}"`
+
+    $stdout.sync = true
+    args = ['vagrant', 'ssh', '--command', "#{dest_path}"]
+    IO.popen(args).read
+  end
+
   def collectEvidence(into = "#{timestamp}-evidence.zip")
-    evidence_zip_path = "#{HOME}/#{into}"
+    evidence_zip_path = "#{home}/#{into}"
 
     zip(EVIDENCE_DIR, into = evidence_zip_path)
 
@@ -59,8 +75,13 @@ class VagrantWhisperer
   end
 
   def ip_address
-    @ip_address ||= `vagrant ssh -c \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip
+    @ip_address ||= `vagrant ssh -c \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
     @ip_address
+  end
+
+  def home
+    @home ||= run_and_get(['echo $HOME']).strip
+    @home
   end
 
   private
@@ -76,5 +97,4 @@ class VagrantWhisperer
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }
   end
-
 end

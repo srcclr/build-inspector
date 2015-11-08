@@ -36,24 +36,25 @@ repo_name = repo_url.split('/').last.chomp('.git')
 
 commands = []
 
+REPO_DIR = "~/repo"
 # Clone repo
-commands << "git clone #{repo_url} #{VagrantWhisperer::REPO_DIR}"
-commands << "cd #{VagrantWhisperer::REPO_DIR}"
-
+commands << "git clone #{repo_url} #{REPO_DIR}"
+commands << "cd #{REPO_DIR}"
 
 $config = InspectConfig.new
 $whisperer = VagrantWhisperer.new
 
 # Upload filelist of directories to include and exclude for rdiff-backup
 filelist = 'filelist'
-filelist_remote_path = File.join(VagrantWhisperer::HOME, filelist)
+filelist_remote_path = File.join($whisperer.home, filelist)
 File.open filelist, 'w' do |f|
-  f.write $config.filelist
+  f.write($config.filelist.gsub(/\$HOME/, $whisperer.home))
 end
 $whisperer.sendFile(filelist, filelist_remote_path)
 
 get_proc = 'get_processes_job.rb'
-$whisperer.sendFile(get_proc, File.join(VagrantWhisperer::HOME, get_proc))
+remote_get_proc = File.join($whisperer.home, get_proc)
+$whisperer.sendFile(get_proc, remote_get_proc)
 
 # Add repo to backup so we can diff later
 commands << 'echo Preparing file system snapshot ...'
@@ -62,7 +63,7 @@ commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{Va
 commands << 'echo "Starting network monitoring ..."'
 commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 &disown"
 
-commands << "ruby #{File.join(VagrantWhisperer::HOME, get_proc)} &disown"
+commands << "ruby #{remote_get_proc} &disown"
 
 commands << 'sleep 1'
 
@@ -94,9 +95,7 @@ def prettify(size)
   (size / KILOBYTE).round(1).to_s + 'K'
 end
 
-def print_outgoing_connections
-  pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
-
+def print_outgoing_connections(pcap_file)
   vagrant_ip = $whisperer.ip_address
   packet_inspector = PacketInspector.new pcap_file
   outgoing_packets = packet_inspector.packets_from vagrant_ip
@@ -116,7 +115,7 @@ def print_outgoing_connections
 
   # whitelist the dns' ip as we wouldn't want it to show up
   dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
-  whitelist = whitelist + dns_server if dns_server
+  whitelist += dns_server if dns_server
 
   not_in_whitelist = ips_sizes.map { |ip, size| [address_to_name.fetch(ip, ip), ip, size] }
                               .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
@@ -149,8 +148,10 @@ def print_processes
   end
 end
 
-print_outgoing_connections
+pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
+print_outgoing_connections pcap_file
 print_fs_changes
 print_processes
 
+puts 'Rolling back virtual machine state...'
 `vagrant sandbox rollback` if options[:rollback]
