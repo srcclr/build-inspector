@@ -1,4 +1,3 @@
-set -e
 mv ~/sources.list /etc/apt/sources.list
 mv ~/sshd /etc/pam.d/sshd
 
