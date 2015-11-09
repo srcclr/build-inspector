@@ -28,7 +28,7 @@ optparse.parse!
 if ARGV.size < 1
   puts 'Must specifiy a repo URL'
   puts optparse.help
-  exit -1
+  exit(-1)
 end
 
 repo_url = ARGV[0]
