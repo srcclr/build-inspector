@@ -61,7 +61,7 @@ class VagrantWhisperer
   def zip(dir, into = dir)
     zip_file = into
     zip_file = "#{zip_file}.zip" if !zip_file.end_with? '.zip'
-    runCommands(["zip -r #{zip_file} #{dir}"])
+    run(["zip -r #{zip_file} #{dir}"])
   end
 
   def sendFile(local_path, remote_path)
