@@ -97,7 +97,12 @@ class VagrantWhisperer
     end
 
     # Silence ssh logging
-    ssh_opts['LogLevel'] = 'QUIET'
+    ssh_opts['LogLevel']       = 'QUIET'
+
+    # Multiplex for faster ssh connections
+    ssh_opts['ControlPath']    = '~/.ssh/%r@%h:%p'
+    ssh_opts['ControlMaster']  = 'auto'
+    ssh_opts['ControlPersist'] = '10m'
 
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }
