@@ -1,4 +1,4 @@
-require 'celluloid'
+require 'celluloid/current'
 require 'sys/proctable'
 require 'yaml'
 class GetProcessesJob
