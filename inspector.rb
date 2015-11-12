@@ -153,5 +153,7 @@ print_outgoing_connections pcap_file
 print_fs_changes
 print_processes
 
-puts 'Rolling back virtual machine state...'
-`vagrant sandbox rollback` if options[:rollback]
+if options[:rollback]
+  puts 'Rolling back virtual machine state...'
+  Utils.exec_puts 'vagrant sandbox rollback'
+end
