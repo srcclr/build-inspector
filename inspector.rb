@@ -83,11 +83,10 @@ commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e;
 $whisperer.runCommands(commands)
 
 puts 'Zipping and downloading evidences from vagrant image...'
-include Utils
-zipfile = "#{timestamp}-#{repo_name}-evidence.zip"
+zipfile = "#{Utils.timestamp}-#{repo_name}-evidence.zip"
 $local_evidence_dir = zipfile.chomp '.zip'
 $whisperer.collectEvidence(into = zipfile)
-unzip zipfile, $local_evidence_dir
+Utils.unzip zipfile, $local_evidence_dir
 
 KILOBYTE = 1024.0
 
