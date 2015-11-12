@@ -1,7 +1,6 @@
 require './utils'
 
 class VagrantWhisperer
-  include Utils
 
   EVIDENCE_DIR = '/evidence'
   BACKUP_DIR = '/backup'
@@ -48,7 +47,7 @@ class VagrantWhisperer
     IO.popen(args).read
   end
 
-  def collectEvidence(into = "#{timestamp}-evidence.zip")
+  def collectEvidence(into = "#{Utils.timestamp}-evidence.zip")
     evidence_zip_path = "#{home}/#{into}"
 
     zip(EVIDENCE_DIR, into = evidence_zip_path)
