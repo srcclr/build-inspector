@@ -10,7 +10,7 @@ class VagrantWhisperer
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
 
-  def runCommands(commands)
+  def run(commands)
     file_path = 'tmp_runCommands.sh'
     dest_path = File.join TMP_DIR, file_path
     commands.unshift "#!/bin/bash"
@@ -20,14 +20,14 @@ class VagrantWhisperer
     sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    `vagrant ssh --command "chmod +x #{dest_path}"`
+    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
+    ssh_args = "#{opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}"
+    `ssh #{ssh_args} "chmod +x #{dest_path}"`
 
     # Stream output as we get it
     $stdout.sync = true
-    args = ['vagrant', 'ssh', '--command', "#{dest_path}"]
-    IO.popen(args) do |f|
-      puts f.gets until f.eof?
-    end
+    command = "ssh #{ssh_args} #{dest_path}"
+    Utils.exec_puts command
   end
 
   def run_and_get(commands)
@@ -40,11 +40,14 @@ class VagrantWhisperer
     sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    `vagrant ssh --command "chmod +x #{dest_path}"`
+    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
+    ssh_args = "#{opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}"
+    `ssh #{ssh_args} "chmod +x #{dest_path}"`
 
+    # Stream output as we get it
     $stdout.sync = true
-    args = ['vagrant', 'ssh', '--command', "#{dest_path}"]
-    IO.popen(args).read
+    command = "ssh #{ssh_args} #{dest_path}"
+    IO.popen(command).read
   end
 
   def collectEvidence(into = "#{Utils.timestamp}-evidence.zip")
@@ -92,6 +95,9 @@ class VagrantWhisperer
       k, v = e.split(/\s+/)
       ssh_opts[k] = v
     end
+
+    # Silence ssh logging
+    ssh_opts['LogLevel'] = 'QUIET'
 
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }

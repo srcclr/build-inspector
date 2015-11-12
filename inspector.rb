@@ -30,6 +30,7 @@ if ARGV.size < 1
   puts optparse.help
   exit(-1)
 end
+`vagrant sandbox on`
 
 repo_url = ARGV[0]
 repo_name = repo_url.split('/').last.chomp('.git')
@@ -71,7 +72,7 @@ commands << 'sleep 1'
 # script can be a string or an array of strings
 commands = (commands + [$config.script]).flatten
 
-$whisperer.runCommands(commands)
+$whisperer.run(commands)
 
 commands.clear
 commands << 'pkill ruby'
@@ -80,7 +81,7 @@ get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::B
 commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
 commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u /backup/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff-with-changes.txt~
 
-$whisperer.runCommands(commands)
+$whisperer.run(commands)
 
 puts 'Zipping and downloading evidences from vagrant image...'
 zipfile = "#{Utils.timestamp}-#{repo_name}-evidence.zip"
