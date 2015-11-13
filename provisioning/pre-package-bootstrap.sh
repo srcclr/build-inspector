@@ -16,10 +16,10 @@ service puppet stop
 service chef-client stop
 
 echo "Adding brightbox's ruby repository"
-apt-add-repository ppa:brightbox/ruby-ng
+apt-add-repository -y ppa:brightbox/ruby-ng
 
 echo "Adding chis-lea's node js repository"
-add-apt-repository ppa:chris-lea/node.js
+add-apt-repository -y ppa:chris-lea/node.js
 
 echo "Updating apt"
 apt-get update
