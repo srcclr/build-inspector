@@ -20,9 +20,7 @@ class VagrantWhisperer
     sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
-    ssh_args = "#{opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}"
-    `ssh #{ssh_args} "chmod +x #{dest_path}"`
+    ssh_exec "chmod +x #{dest_path}"
 
     # Stream output as we get it
     $stdout.sync = true
@@ -40,9 +38,7 @@ class VagrantWhisperer
     sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
-    ssh_args = "#{opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}"
-    `ssh #{ssh_args} "chmod +x #{dest_path}"`
+    ssh_exec "chmod +x #{dest_path}"
 
     # Stream output as we get it
     $stdout.sync = true
@@ -65,19 +61,17 @@ class VagrantWhisperer
   end
 
   def sendFile(local_path, remote_path)
-    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
-    cmd = "scp #{opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
+    cmd = "scp #{ssh_opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
     `#{cmd}`
   end
 
   def getFile(remote_path, local_path = '.')
-    opts_str = @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
-    cmd = "scp #{opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path} #{local_path}"
+    cmd = "scp #{ssh_opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path} #{local_path}"
     `#{cmd}`
   end
 
   def ip_address
-    @ip_address ||= `vagrant ssh -c \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
+    @ip_address ||= ssh_exec("ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'").strip.split.first
     @ip_address
   end
 
@@ -88,6 +82,18 @@ class VagrantWhisperer
 
   private
 
+  def ssh_exec(command)
+    `ssh #{ssh_args} "#{command}"`
+  end
+
+  def ssh_args
+    "#{ssh_opts_str} -t #{@ssh_opts['User']}@#{@ssh_opts['HostName']}"
+  end
+
+  def ssh_opts_str
+    @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
+  end
+
   def parse_ssh_config(config)
     ssh_opts = {}
     config.lines.map(&:strip).each do |e|
@@ -97,12 +103,7 @@ class VagrantWhisperer
     end
 
     # Silence ssh logging
-    ssh_opts['LogLevel']       = 'QUIET'
-
-    # Multiplex for faster ssh connections
-    ssh_opts['ControlPath']    = '~/.ssh/%r@%h:%p'
-    ssh_opts['ControlMaster']  = 'auto'
-    ssh_opts['ControlPersist'] = '10m'
+    ssh_opts['LogLevel'] = 'QUIET'
 
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }
