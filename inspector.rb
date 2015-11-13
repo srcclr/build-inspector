@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 require 'optparse'
 require 'resolv'
+require 'terminal-table'
+require 'rainbow'
 require './vagrant_whisperer'
 require './packet_inspector'
 require './inspect_config'
@@ -35,10 +37,19 @@ end
 repo_url = ARGV[0]
 repo_name = repo_url.split('/').last.chomp('.git')
 
+def yellowify(text)
+  Rainbow(text).yellow.bright
+end
+
+def yell(text)
+  "echo #{yellowify(text)}"
+end
+
 commands = []
 
 REPO_DIR = "~/repo"
 # Clone repo
+commands << yell("Cloning #{repo_url} ...")
 commands << "git clone #{repo_url} #{REPO_DIR}"
 commands << "cd #{REPO_DIR}"
 
@@ -59,10 +70,10 @@ remote_get_proc = File.join($whisperer.home, get_proc)
 $whisperer.sendFile(get_proc, remote_get_proc)
 
 # Add repo to backup so we can diff later
-commands << 'echo Preparing file system snapshot ...'
+commands << yell('Preparing file system snapshot ...')
 commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{VagrantWhisperer::BACKUP_DIR}"
 
-commands << 'echo "Starting network monitoring ..."'
+commands << yell('Starting network monitoring ...')
 commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 &disown"
 
 commands << "ruby #{remote_get_proc} &disown"
@@ -78,6 +89,7 @@ commands.clear
 commands << 'pkill ruby'
 commands << 'sudo pkill tcpdump'
 get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::BACKUP_DIR} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
+commands << yell('Comparing file system snapshots ...')
 commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
 commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u /backup/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff-with-changes.txt~
 
@@ -122,7 +134,7 @@ def print_outgoing_connections(pcap_file)
                               .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
   return if not_in_whitelist.empty?
 
-  puts "The following hostnames were reached during the build process:"
+  puts yellowify('The following hostnames were reached during the build process:')
   not_in_whitelist.each do |hostname, ip, size|
     name_ip = "#{hostname} (#{ip})".ljust(60)
     puts "  #{name_ip} #{prettify(size).rjust(10)}"
@@ -143,7 +155,7 @@ def print_processes
     procs << contents if contents
   end
   return if procs.empty?
-  puts 'The following processes were running during the build:'
+  puts yellowify('The following processes were running during the build:')
   procs.flatten.each do |proc|
     puts "  - #{proc}"
   end
@@ -155,6 +167,6 @@ print_fs_changes
 print_processes
 
 if options[:rollback]
-  puts 'Rolling back virtual machine state...'
+  puts yellowify('Rolling back virtual machine state...')
   Utils.exec_puts 'vagrant sandbox rollback'
 end
