@@ -6,14 +6,18 @@ GEM
       network_interface (~> 0.0)
       pcaprub (~> 0.12)
     pcaprub (0.12.0)
+    rainbow (2.0.0)
     rubyzip (1.1.7)
+    terminal-table (1.5.2)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
   packetfu
+  rainbow
   rubyzip
+  terminal-table
 
 BUNDLED WITH
    1.10.6
