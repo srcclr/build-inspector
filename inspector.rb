@@ -8,6 +8,8 @@ require './packet_inspector'
 require './inspect_config'
 require './utils'
 
+$stdout.sync = true
+
 options = {
   rollback: true
 }
@@ -36,22 +38,7 @@ end
 
 repo_url = ARGV[0]
 repo_name = repo_url.split('/').last.chomp('.git')
-
-def yellowify(text)
-  Rainbow(text).yellow.bright
-end
-
-def yell(text)
-  "echo #{yellowify(text)}"
-end
-
-commands = []
-
 REPO_DIR = "~/repo"
-# Clone repo
-commands << yell("Cloning #{repo_url} ...")
-commands << "git clone #{repo_url} #{REPO_DIR}"
-commands << "cd #{REPO_DIR}"
 
 $config = InspectConfig.new
 $whisperer = VagrantWhisperer.new
@@ -65,37 +52,34 @@ end
 $whisperer.sendFile(filelist, filelist_remote_path)
 `rm #{filelist}`
 
-get_proc = 'get_processes_job.rb'
-remote_get_proc = File.join($whisperer.home, get_proc)
-$whisperer.sendFile(get_proc, remote_get_proc)
+$whisperer.run desc: "Cloning #{repo_url} ..." do |commands|
+  commands << "git clone #{repo_url} #{REPO_DIR}"
+end
 
-# Add repo to backup so we can diff later
-commands << yell('Preparing file system snapshot ...')
-commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{VagrantWhisperer::BACKUP_DIR}"
+$whisperer.run desc: 'Preparing file system snapshot ...' do |commands|
+  commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{VagrantWhisperer::BACKUP_DIR}"
+end
 
-commands << yell('Starting network monitoring ...')
-commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 &disown"
+$whisperer.run desc: 'Starting network monitoring ...' do |commands|
+  commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 > /dev/null &disown"
+  commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-before.txt"
+end
 
-commands << "ruby #{remote_get_proc} &disown"
+$whisperer.run desc: 'Starting build ...' do |commands|
+  commands << "cd #{REPO_DIR}"
+  commands.concat($config.script).flatten # $config.script may be a list
+  commands << Utils.yell('Done. Your build exited with $?.')
+end
 
-commands << 'sleep 1'
+$whisperer.run desc: 'Comparing file system snapshots ...' do |commands|
+  commands << 'sudo pkill tcpdump'
+  commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-after.txt"
+  get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::BACKUP_DIR} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
+  commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
+  commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u /backup/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff-with-changes.txt~
+end
 
-# script can be a string or an array of strings
-commands = (commands + [$config.script]).flatten
-
-$whisperer.run(commands)
-
-commands.clear
-commands << 'pkill ruby'
-commands << 'sudo pkill tcpdump'
-get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::BACKUP_DIR} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
-commands << yell('Comparing file system snapshots ...')
-commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
-commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u /backup/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff-with-changes.txt~
-
-$whisperer.run(commands)
-
-puts 'Zipping and downloading evidences from vagrant image...'
+puts Utils.yellowify('Zipping and downloading evidences from vagrant image ...')
 zipfile = "#{Utils.timestamp}-#{repo_name}-evidence.zip"
 $local_evidence_dir = zipfile.chomp '.zip'
 $whisperer.collectEvidence(into = zipfile)
@@ -134,7 +118,7 @@ def print_outgoing_connections(pcap_file)
                               .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
   return if not_in_whitelist.empty?
 
-  puts yellowify('The following hostnames were reached during the build process:')
+  puts Utils.yellowify('The following hostnames were reached during the build process:')
   not_in_whitelist.each do |hostname, ip, size|
     name_ip = "#{hostname} (#{ip})".ljust(60)
     puts "  #{name_ip} #{prettify(size).rjust(10)}"
@@ -155,7 +139,7 @@ def print_processes
     procs << contents if contents
   end
   return if procs.empty?
-  puts yellowify('The following processes were running during the build:')
+  puts Utils.yellowify('The following processes were running during the build:')
   procs.flatten.each do |proc|
     puts "  - #{proc}"
   end
@@ -167,6 +151,6 @@ print_fs_changes
 print_processes
 
 if options[:rollback]
-  puts yellowify('Rolling back virtual machine state...')
+  puts Utils.yellowify('Rolling back virtual machine state...')
   Utils.exec_puts 'vagrant sandbox rollback'
 end

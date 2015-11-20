@@ -1,10 +1,13 @@
 require 'zip'
+require 'rainbow'
+require 'open3'
 
 module Utils
   # Because "puts `cmd`" doesn't stream the output as it appears
   def self.exec_puts(command)
-    IO.popen(command) do |f|
-      puts f.gets until f.eof?
+    Open3.popen3(command) do |_, stdout, stderr, _|
+      puts "==> inspector: #{stdout.gets}" until stdout.eof?
+      print "==> inspector: #{Rainbow(stderr.gets).red}" until stderr.eof?
     end
   end
 
@@ -20,5 +23,13 @@ module Utils
         entry.extract(path) { true } # overwrites by default
       end
     end
+  end
+
+  def self.yellowify(text)
+    Rainbow(text).yellow.bright
+  end
+
+  def self.yell(text)
+    "echo #{yellowify(text)}"
   end
 end

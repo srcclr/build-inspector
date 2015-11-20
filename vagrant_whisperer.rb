@@ -10,7 +10,12 @@ class VagrantWhisperer
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
 
-  def run(commands)
+  def run(opts = {})
+    return if !block_given?
+    puts Utils.yellowify(opts[:desc]) if opts.key? :desc
+    commands = []
+    yield commands
+
     file_path = 'tmp_runCommands.sh'
     dest_path = File.join TMP_DIR, file_path
     commands.unshift "#!/bin/bash"
@@ -21,11 +26,7 @@ class VagrantWhisperer
     File.delete(file_path)
 
     ssh_exec "chmod +x #{dest_path}"
-
-    # Stream output as we get it
-    $stdout.sync = true
-    command = "ssh #{ssh_args} #{dest_path}"
-    Utils.exec_puts command
+    ssh_exec "#{dest_path}"
   end
 
   def run_and_get(commands)
@@ -57,7 +58,7 @@ class VagrantWhisperer
   def zip(dir, into = dir)
     zip_file = into
     zip_file = "#{zip_file}.zip" if !zip_file.end_with? '.zip'
-    run(["zip -r #{zip_file} #{dir}"])
+    run { |c| c << "zip -r #{zip_file} #{dir} 2>&1 > /dev/null" }
   end
 
   def sendFile(local_path, remote_path)
@@ -71,7 +72,7 @@ class VagrantWhisperer
   end
 
   def ip_address
-    @ip_address ||= ssh_exec("ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'").strip.split.first
+    @ip_address ||= `ssh #{ssh_args} \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
     @ip_address
   end
 
@@ -83,7 +84,7 @@ class VagrantWhisperer
   private
 
   def ssh_exec(command)
-    `ssh #{ssh_args} "#{command}"`
+    Utils.exec_puts "ssh #{ssh_args} \"#{command}\""
   end
 
   def ssh_args
@@ -104,6 +105,11 @@ class VagrantWhisperer
 
     # Silence ssh logging
     ssh_opts['LogLevel'] = 'QUIET'
+
+#    # Multiplex for faster ssh connections
+#    ssh_opts['ControlPath']    = '~/.ssh/%r@%h:%p'
+#    ssh_opts['ControlMaster']  = 'auto'
+#    ssh_opts['ControlPersist'] = '10m'
 
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }
