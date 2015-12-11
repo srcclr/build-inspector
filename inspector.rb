@@ -145,10 +145,23 @@ def print_processes
   end
 end
 
+def print_processes_left_running
+  procs_before = File.readlines(File.join($local_evidence_dir, 'evidence', 'ps-before.txt'))
+  procs_after = File.readlines(File.join($local_evidence_dir, 'evidence', 'ps-after.txt'))
+
+  procs = procs_after - procs_before
+  return if procs.empty?
+  puts Utils.yellowify('The following processes were left running after the build:')
+  procs.flatten.each do |proc|
+    puts "  - #{proc}"
+  end
+end
+
 pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
 print_outgoing_connections pcap_file
 print_fs_changes
-print_processes
+print_processes_left_running
+#print_processes
 
 if options[:rollback]
   puts Utils.yellowify('Rolling back virtual machine state...')
