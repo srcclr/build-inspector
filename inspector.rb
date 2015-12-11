@@ -67,7 +67,7 @@ end
 
 $whisperer.run desc: 'Starting build ...' do |commands|
   commands << "cd #{REPO_DIR}"
-  commands.concat($config.script).flatten # $config.script may be a list
+  commands.concat([$config.script]).flatten # $config.script may be a list
   commands << Utils.yell('Done. Your build exited with $?.')
 end
 
