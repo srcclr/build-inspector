@@ -61,7 +61,7 @@ $whisperer.run desc: 'Preparing file system snapshot ...' do |commands|
 end
 
 $whisperer.run desc: 'Starting network monitoring ...' do |commands|
-  commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 > /dev/null &disown"
+  commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 > /dev/null 2>&1 &disown"
   commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-before.txt"
 end
 
