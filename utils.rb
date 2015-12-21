@@ -5,13 +5,22 @@ require 'open3'
 module Utils
   # Because "puts `cmd`" doesn't stream the output as it appears
   def self.exec_puts(command)
-    #Open3.popen3(command) do |_, stdout, stderr, _|
-    #  puts "==> inspector: #{stdout.gets}" until stdout.eof?
-    #  print "==> inspector: #{Rainbow(stderr.gets).red}" until stderr.eof?
-    #end
-    stdout, stderr = Open3.capture3(command)
-    stdout.each_line { |line| puts "==> inspector: #{line}" }
-    stderr.each_line{ |line| print "==> inspector: #{Rainbow(line).red}" }
+    Open3.popen3(command) do |stdin, stdout, stderr, thread|
+      # read each stream from a new thread
+      { :out => stdout, :err => stderr }.each do |type, stream|
+        Thread.new do
+          until (line = stream.gets).nil? do
+            case type
+            when :out
+              puts "==> inspector: #{line}"
+            when :err
+              print "==> inspector: #{Rainbow(line).red}"
+            end
+          end
+        end
+      end
+      thread.join
+    end
   end
 
   def self.timestamp
