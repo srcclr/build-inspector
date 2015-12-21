@@ -127,6 +127,7 @@ end
 
 def print_fs_changes
   diff_file = File.join($local_evidence_dir, 'evidence', 'fs-diff-with-changes.txt')
+  puts Utils.yellowify('The file system was changed at these places')
   File.foreach(diff_file) { |x| puts x }
 end
 
