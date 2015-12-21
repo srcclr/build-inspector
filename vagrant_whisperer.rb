@@ -25,8 +25,7 @@ class VagrantWhisperer
     sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    ssh_exec "chmod +x #{dest_path}"
-    ssh_exec "#{dest_path}"
+    ssh_exec "bash #{dest_path}"
   end
 
   def run_and_get(commands)
