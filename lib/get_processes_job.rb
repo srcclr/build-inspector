@@ -1,9 +1,11 @@
 require 'celluloid/current'
 require 'sys/proctable'
 require 'yaml'
+
 class GetProcessesJob
   include Celluloid
   include Sys
+
   def start
     old_value = ProcTable.ps.map(&:cmdline)
     new_value = []
@@ -18,6 +20,7 @@ class GetProcessesJob
     end
   end
 end
+
 job = GetProcessesJob.new
 job.start
 `mkdir /evidence/ps/`

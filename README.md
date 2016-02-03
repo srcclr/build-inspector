@@ -1,10 +1,7 @@
 # Build Inspector
 
-[Build Inspector](https://github.com/srcclr/build-inspector) is a
-tool that gives insight into what's happening when you're building a
-project. It is language and build system agnostic and it is capable of
-inspecting network activities, file system changes and running
-processes. All these happens in a sandboxed environment, without
+[Build Inspector](https://github.com/srcclr/build-inspector) is a forensic sandbox for buliding source code and gives insight into what's happening during the build of a project. It's language and build system agnostic and is capable of inspecting network activities, file system changes, and running
+processes. All build operations happen in a sandboxed environment without
 compromising the developer's machine.
 
 ## Requirements
@@ -12,8 +9,8 @@ compromising the developer's machine.
 - [Ruby](https://www.ruby-lang.org/en/downloads/) (2.2.3 recommended)
 - [Vagrant](https://www.vagrantup.com/)
 
-Once you have both ruby and vagrant installed, go ahead and install
-the sahara plugin, bundler and this project's dependencies.
+Once you have both Ruby and Vagrant installed, go ahead and install
+the Sahara plugin, bundler and this project's dependencies.
 
 ```
 vagrant plugin install sahara
@@ -32,10 +29,10 @@ and you are inside the repository's directory.
 cd build_inspector
 ```
 
-Since this tool does not manage vagrant for you, yet, you'll have to
+Since this tool does not manage Vagrant for you, yet, you'll have to
 do it yourself. This step will take a while the first time, but won't
 be necessary again. Eventually, this step will be eliminated. Start
-vagrant and build the image:
+Vagrant and build the image:
 
 ``` vagrant up ```
 
@@ -47,7 +44,7 @@ vagrant sandbox on
 ### Usage
 
 ```
-Usage inspector.rb [options] <git repo URL>
+Usage inspector [options] <git repo URL>
     -h, --help                       Display this screen
     -n, --no-rollback                Don't rollback the virtual machine's state after running
 ```
@@ -56,7 +53,7 @@ Usage inspector.rb [options] <git repo URL>
 
 ```
 cp configs/gradle_inspect.yml .inspect.yml
-ruby inspector.rb https://github.com/jsyeo/TotallyLegitApp.git
+./inspector https://github.com/jsyeo/TotallyLegitApp.git
 ```
 
 The above project has a task called `backdoor` that adds a reverse
@@ -84,10 +81,10 @@ network activity, file system changes, and any new processes.
 
 ```
 cp configs/bundler_inspect.yml .inspect.yml
-ruby inspector.rb https://github.com/jsyeo/harmless-project.git
+./inspector https://github.com/jsyeo/harmless-project.git
 ```
 
-This bundler project has a gem that pings google during its
+This bundler project has a gem that pings Google during its
 installation.
 
 Run it with the Build Inspector and you should see a list of domains
@@ -102,10 +99,10 @@ The following hostnames were reached during the build process:
 
 ```
 cp configs/npm_inspect.yml .inspect.yml
-ruby inspector.rb https://github.com/jsyeo/ann-pee-am
+./inspector https://github.com/jsyeo/ann-pee-am
 ```
 
-Inspecting this npm project should yield the following output:
+Inspecting this NPM project should yield the following output:
 
 ```
 The following processes were running during the build:
@@ -113,14 +110,14 @@ The following processes were running during the build:
   - nc -l 0.0.0.0 8080
 ```
 
-That's because the npm project depends on a module that opens a
-persistent backdoor using netcat.
+That's because the NPM project depends on a module that opens a
+persistent backdoor using `netcat`.
 
 ### Configuration
 
-The tool monitors all network and file system activities.  To ignore
+The tool monitors all network and file system activities. To ignore
 hosts or exclude directories from the monitoring, create and add an
-`.inspect.yml` in the repository.  The `.inspect.yml' file is simply
+`.inspect.yml` in the repository. The `.inspect.yml' file is simply
 a YAML file that looks like this:
 
 ```
@@ -142,13 +139,17 @@ directories:
     - /etc
 ```
 
-There are examples for different build systems in the `configs`
-directory.  You may copy the approriate configs for your build system
+There are examples for different build systems in the [configs](configs)
+directory. You may copy the approriate configs for your build system
 to the root of this project or you may write one from scratch.
 
 ## Development
 
-When you want to experiment, just do `vagrant sandbox on`. Make all
-the changes you want to the image. If you'd like to keep them do
-`vagrant sandbox commit` and if you don't do `vagrant sandbox
-rollback`.
+When you want to experiment, just do:
+`vagrant sandbox on`
+
+Then, make all the changes you want to the image. If you'd like to save the changes, do:
+`vagrant sandbox commit`
+
+Otherwise, you can wipe out the changes with:
+`vagrant sandbox rollback`

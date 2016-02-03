@@ -1,6 +1,6 @@
-require 'zip'
-require 'rainbow'
 require 'open3'
+require 'rainbow'
+require 'zip'
 
 module Utils
   # Because "puts `cmd`" doesn't stream the output as it appears

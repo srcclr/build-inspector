@@ -1,12 +1,12 @@
 #!/usr/bin/env ruby
 require 'optparse'
+require 'rainbow'
 require 'resolv'
 require 'terminal-table'
-require 'rainbow'
-require './vagrant_whisperer'
-require './packet_inspector'
-require './inspect_config'
-require './utils'
+require_relative 'lib/inspect_config'
+require_relative 'lib/packet_inspector'
+require_relative 'lib/utils'
+require_relative 'lib/vagrant_whisperer'
 
 $stdout.sync = true
 
@@ -30,11 +30,10 @@ end
 optparse.parse!
 
 if ARGV.size < 1
-  puts 'Must specifiy a repo URL'
+  puts 'Must specifiy a repository URL'
   puts optparse.help
   exit(-1)
 end
-`vagrant sandbox on`
 
 repo_url = ARGV[0]
 repo_name = repo_url.split('/').last.chomp('.git')
@@ -43,13 +42,15 @@ REPO_DIR = "~/repo"
 $config = InspectConfig.new
 $whisperer = VagrantWhisperer.new
 
+$whisperer.start_sandbox
+
 # Upload filelist of directories to include and exclude for rdiff-backup
 filelist = 'filelist'
 filelist_remote_path = File.join($whisperer.home, filelist)
 File.open filelist, 'w' do |f|
   f.write($config.filelist.gsub(/\$HOME/, $whisperer.home))
 end
-$whisperer.sendFile(filelist, filelist_remote_path)
+$whisperer.send_file(filelist, filelist_remote_path)
 `rm #{filelist}`
 
 $whisperer.run desc: "Cloning #{repo_url} ..." do |commands|
@@ -81,8 +82,8 @@ end
 
 puts Utils.yellowify('Zipping and downloading evidences from vagrant image ...')
 zipfile = "#{Utils.timestamp}-#{repo_name}-evidence.zip"
-$local_evidence_dir = zipfile.chomp '.zip'
-$whisperer.collectEvidence(into = zipfile)
+$local_evidence_dir = zipfile.chomp(File.extname(zipfile))
+$whisperer.collect_evidence(into = zipfile)
 Utils.unzip zipfile, $local_evidence_dir
 
 KILOBYTE = 1024.0
@@ -127,7 +128,7 @@ end
 
 def print_fs_changes
   diff_file = File.join($local_evidence_dir, 'evidence', 'fs-diff-with-changes.txt')
-  puts Utils.yellowify('The file system was changed at these places')
+  puts Utils.yellowify('The file system was changed at these places:')
   File.foreach(diff_file) { |x| puts x }
 end
 
@@ -164,7 +165,4 @@ print_fs_changes
 print_processes_left_running
 #print_processes
 
-if options[:rollback]
-  puts Utils.yellowify('Rolling back virtual machine state...')
-  Utils.exec_puts 'vagrant sandbox rollback'
-end
+$whisperer.rollback_sandbox if options[:rollback]
