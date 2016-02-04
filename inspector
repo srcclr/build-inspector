@@ -6,7 +6,7 @@ require_relative 'lib/build_inspector'
 require_relative 'lib/configuration'
 require_relative 'lib/evidence_collector'
 require_relative 'lib/packet_inspector'
-require_relative 'lib/utils'
+require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
 
 # Don't buffer output. Flush immediately.
@@ -45,15 +45,14 @@ inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
                                rollback: options[:rollback])
 
 whisperer.snapshot
-
 inspector.inspect
 
 repo_url = ARGV.first
 repo_name = repo_url.split('/').last.chomp('.git')
-evidence_name = "evidence-#{repo_name}-#{Utils.timestamp}"
+evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
 collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
 
-puts Utils.yellowify('Collecting evidence ...')
+puts Printer.yellowify('Collecting evidence ...')
 collector.collect
 
 whisperer.rollback
@@ -65,8 +64,8 @@ def prettify(size)
   (size / KILOBYTE).round(1).to_s + 'K'
 end
 
-def print_outgoing_connections(pcap_file)
-  vagrant_ip = $whisperer.ip_address
+def print_outgoing_connections(pcap_file, vagrant_ip, whitelist)
+  puts pcap_file
   packet_inspector = PacketInspector.new pcap_file
   outgoing_packets = packet_inspector.packets_from vagrant_ip
 
@@ -81,8 +80,6 @@ def print_outgoing_connections(pcap_file)
     addresses.each { |address| memo[address.to_s] = name }
   end
 
-  whitelist = config.host_whitelist
-
   # whitelist the dns' ip as we wouldn't want it to show up
   dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
   whitelist += dns_server if dns_server
@@ -91,49 +88,35 @@ def print_outgoing_connections(pcap_file)
                               .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
   return if not_in_whitelist.empty?
 
-  puts Utils.yellowify('The following hostnames were reached during the build process:')
+  puts Printer.yellowify('The following hostnames were reached during the build process:')
   not_in_whitelist.each do |hostname, ip, size|
     name_ip = "#{hostname} (#{ip})".ljust(60)
     puts "  #{name_ip} #{prettify(size).rjust(10)}"
   end
 end
 
-def print_fs_changes
-  diff_file = File.join($local_evidence_dir, 'evidence', 'fs-diff-with-changes.txt')
-  puts Utils.yellowify('The file system was changed at these places:')
+def print_fs_changes(diff_file)
+  puts Printer.yellowify('The file system was changed at these places:')
   File.foreach(diff_file) { |x| puts x }
 end
 
-def print_processes
-  ps_dir = File.join($local_evidence_dir, 'evidence', 'ps')
-  procs = []
-  Dir.foreach(ps_dir) do |filename|
-    next if filename == '.' || filename == '..'
-    contents = YAML.load_file(File.join(ps_dir, filename))
-    procs << contents if contents
-  end
-  return if procs.empty?
-  puts Utils.yellowify('The following processes were running during the build:')
-  procs.flatten.each do |proc|
-    puts "  - #{proc}"
-  end
-end
-
-def print_processes_left_running
-  procs_before = File.readlines(File.join($local_evidence_dir, 'evidence', 'ps-before.txt'))
-  procs_after = File.readlines(File.join($local_evidence_dir, 'evidence', 'ps-after.txt'))
-
+def print_processes_left_running(procs_before_file, procs_after_file)
+  procs_before = File.readlines(procs_before_file)
+  procs_after = File.readlines(procs_after_file)
   procs = procs_after - procs_before
   return if procs.empty?
-  puts Utils.yellowify('The following processes were left running after the build:')
+  puts Printer.yellowify('The following new processes were running after the build:')
   procs.flatten.each do |proc|
     puts "  - #{proc}"
   end
 end
 
-pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
+pcap_file = File.join(evidence_name, 'evidence', BuildInspector::PCAP_FILE)
+print_outgoing_connections(pcap_file, whisperer.ip_address, config.host_whitelist)
 
-print_outgoing_connections pcap_file
-print_fs_changes
-print_processes_left_running
-#print_processes
+diff_file = File.join(evidence_name, 'evidence', 'fs-diff-with-changes.txt')
+print_fs_changes(diff_file)
+
+procs_before_file = File.join(evidence_name, 'evidence', BuildInspector::PROCESSES_BEFORE_FILE)
+procs_after_file = File.join(evidence_name, 'evidence', BuildInspector::PROCESSES_AFTER_FILE)
+print_processes_left_running(procs_before_file, procs_after_file)

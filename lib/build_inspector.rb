@@ -1,10 +1,16 @@
+require_relative 'printer'
 require_relative 'vagrant_whisperer'
-require_relative 'utils'
 
 class BuildInspector
   EVIDENCE_PATH = '/evidence'
   BACKUP_PATH = '/backup'
   REPO_PATH = '$HOME/repo'
+  RDIFF_TARGET = '/'
+
+  PCAP_FILE = 'traffic.pcap'
+  FILESYSTEM_DIFF_FILE = 'filesystem-diff.txt'
+  PROCESSES_BEFORE_FILE = 'ps-before.txt'
+  PROCESSES_AFTER_FILE = 'ps-after.txt'
 
   def initialize(whisperer:, repo_url:, commands:, evidence_files: '', rollback: true, verbose: false)
     @whisperer = whisperer
@@ -30,33 +36,30 @@ class BuildInspector
     local_list.unlink
 
     @whisperer.run(message: 'Preparing file system snapshot ...') do |commands|
-      target_path = '/'
-      commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} #{target_path} #{BACKUP_PATH}"
+      commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} #{RDIFF_TARGET} #{BACKUP_PATH}"
     end
 
     @whisperer.run(message: 'Starting network monitoring ...') do |commands|
       commands << "sudo tcpdump -w #{EVIDENCE_PATH}/traffic.pcap -i eth0 > /dev/null 2>&1 &disown"
-      commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/ps-before.txt"
+      commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/#{PROCESSES_BEFORE_FILE}"
     end
 
     @whisperer.run(message: 'Starting build ...') do |commands|
       commands << "cd #{REPO_PATH}"
-
-      commands.concat([@commands]).flatten! # config.script may be a list
-
-      commands << Utils.yell('Done. Your build exited with $?.')
+      commands += @commands
+      commands << Printer.yell('Done. Your build exited with $?.')
     end
 
     @whisperer.run(message: 'Cleaning up ...') do |commands|
       commands << 'sudo pkill tcpdump'
-      commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/ps-after.txt"
+      commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/#{PROCESSES_AFTER_FILE}"
     end
 
     @whisperer.run(message: 'Generating file system changes ...') do |commands|
       get_current_mirror = "`sudo rdiff-backup --list-increments #{BACKUP_PATH} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
-      commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} --compare-at-time \"#{get_current_mirror}\" / #{BACKUP_PATH} > #{EVIDENCE_PATH}/fs-diff.txt"
+      commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} --compare-at-time \"#{get_current_mirror}\" #{RDIFF_TARGET} #{BACKUP_PATH} > #{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}"
       # TODO: do this locally rather than remotely
-      commands << %Q~ruby -e 'IO.readlines("#{EVIDENCE_PATH}/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{EVIDENCE_PATH}/fs-diff-with-changes.txt~
+      commands << %Q~ruby -e 'IO.readlines("#{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{EVIDENCE_PATH}/fs-diff-with-changes.txt~
     end
   end
 end

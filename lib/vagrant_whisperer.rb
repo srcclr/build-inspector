@@ -1,4 +1,4 @@
-require_relative 'utils'
+require_relative 'printer'
 
 class VagrantWhisperer
   TMP_PATH = '/tmp'
@@ -11,7 +11,7 @@ class VagrantWhisperer
 
   def run(message: nil)
     return unless block_given?
-    puts Utils.yellowify(message) if message
+    puts Printer.yellowify(message) if message
     commands = []
     yield commands
 
@@ -33,8 +33,8 @@ class VagrantWhisperer
   end
 
   def rollback
-    puts Utils.yellowify('Rolling back virtual machine state ...')
-    Utils.exec_puts 'vagrant sandbox rollback'
+    puts Printer.yellowify('Rolling back virtual machine state ...')
+    Printer.exec_puts 'vagrant sandbox rollback'
   end
 
   def run_and_get(commands)
@@ -80,7 +80,7 @@ class VagrantWhisperer
   private
 
   def ssh_exec(command)
-    Utils.exec_puts "ssh #{ssh_args} \"#{command}\""
+    Printer.exec_puts "ssh #{ssh_args} \"#{command}\""
   end
 
   def ssh_args

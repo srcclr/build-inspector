@@ -1,7 +1,7 @@
 require 'open3'
 require 'rainbow'
 
-module Utils
+module Printer
   # Because "puts `cmd`" doesn't stream the output as it appears
   def self.exec_puts(command)
     Open3.popen3(command) do |stdin, stdout, stderr, thread|
@@ -20,10 +20,6 @@ module Utils
       end
       thread.join
     end
-  end
-
-  def self.timestamp
-    Time.now.strftime('%Y%m%d%H%M%S')
   end
 
   def self.yellowify(text)
