@@ -5,6 +5,7 @@ require 'terminal-table'
 require_relative 'lib/build_inspector'
 require_relative 'lib/configuration'
 require_relative 'lib/evidence_collector'
+require_relative 'lib/evidence_processor'
 require_relative 'lib/packet_inspector'
 require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
@@ -45,78 +46,19 @@ inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
                                rollback: options[:rollback])
 
 whisperer.snapshot
+
 inspector.inspect
 
 repo_url = ARGV.first
 repo_name = repo_url.split('/').last.chomp('.git')
 evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
 collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
-
 puts Printer.yellowify('Collecting evidence ...')
 collector.collect
 
-whisperer.rollback
+whisperer.rollback if options[:rollback]
 
-KILOBYTE = 1024.0
-
-def prettify(size)
-  return size.to_s + 'B' if size < 1000
-  (size / KILOBYTE).round(1).to_s + 'K'
-end
-
-def print_outgoing_connections(pcap_file, vagrant_ip, whitelist)
-  puts pcap_file
-  packet_inspector = PacketInspector.new pcap_file
-  outgoing_packets = packet_inspector.packets_from vagrant_ip
-
-  ips_sizes = outgoing_packets.each_with_object(Hash.new(0)) do |packet, memo|
-    memo[packet.ip_dst_readable] += packet.size
-  end
-
-  dns_responses = packet_inspector.dns_responses
-  address_to_name = dns_responses.each_with_object({}) do |name_addresses, memo|
-    name = name_addresses.first
-    addresses = name_addresses.last
-    addresses.each { |address| memo[address.to_s] = name }
-  end
-
-  # whitelist the dns' ip as we wouldn't want it to show up
-  dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
-  whitelist += dns_server if dns_server
-
-  not_in_whitelist = ips_sizes.map { |ip, size| [address_to_name.fetch(ip, ip), ip, size] }
-                              .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
-  return if not_in_whitelist.empty?
-
-  puts Printer.yellowify('The following hostnames were reached during the build process:')
-  not_in_whitelist.each do |hostname, ip, size|
-    name_ip = "#{hostname} (#{ip})".ljust(60)
-    puts "  #{name_ip} #{prettify(size).rjust(10)}"
-  end
-end
-
-def print_fs_changes(diff_file)
-  puts Printer.yellowify('The file system was changed at these places:')
-  File.foreach(diff_file) { |x| puts x }
-end
-
-def print_processes_left_running(procs_before_file, procs_after_file)
-  procs_before = File.readlines(procs_before_file)
-  procs_after = File.readlines(procs_after_file)
-  procs = procs_after - procs_before
-  return if procs.empty?
-  puts Printer.yellowify('The following new processes were running after the build:')
-  procs.flatten.each do |proc|
-    puts "  - #{proc}"
-  end
-end
-
-pcap_file = File.join(evidence_name, 'evidence', BuildInspector::PCAP_FILE)
-print_outgoing_connections(pcap_file, whisperer.ip_address, config.host_whitelist)
-
-diff_file = File.join(evidence_name, 'evidence', 'fs-diff-with-changes.txt')
-print_fs_changes(diff_file)
-
-procs_before_file = File.join(evidence_name, 'evidence', BuildInspector::PROCESSES_BEFORE_FILE)
-procs_after_file = File.join(evidence_name, 'evidence', BuildInspector::PROCESSES_AFTER_FILE)
-print_processes_left_running(procs_before_file, procs_after_file)
+processor = EvidenceProcessor.new(evidence_path: evidence_name,
+                                  vagrant_ip: whisperer.ip_address,
+                                  host_whitelist: config.host_whitelist)
+processor.process

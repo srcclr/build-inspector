@@ -15,17 +15,19 @@ class VagrantWhisperer
     commands = []
     yield commands
 
-    file_path = 'tmp_runCommands.sh'
-    dest_path = File.join(TMP_PATH, file_path)
-    # TODO: why unshift
+    remote_path = File.join(TMP_PATH, 'tmp_runCommands.sh')
     commands.unshift('#!/bin/bash')
-    commands << "rm #{dest_path}"
+    commands << "rm #{remote_path}"
 
-    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write("#{cmd}\n") } }
-    send_file(file_path, dest_path)
-    File.delete(file_path)
+    tf = Tempfile.new('inspector-commands')
+    commands.each { |cmd| tf.write("#{cmd}\n") }
+    tf.rewind
 
-    ssh_exec("bash #{dest_path}")
+    send_file(tf.path, remote_path)
+    tf.close
+    tf.unlink
+
+    ssh_exec("bash #{remote_path}")
   end
 
   def snapshot
@@ -48,7 +50,7 @@ class VagrantWhisperer
     send_file(file_path, dest_path)
     File.delete(file_path)
 
-    ssh_exec "chmod +x #{dest_path}"
+    ssh_exec("chmod +x #{dest_path}")
 
     # Stream output as we get it
     $stdout.sync = true
@@ -80,7 +82,7 @@ class VagrantWhisperer
   private
 
   def ssh_exec(command)
-    Printer.exec_puts "ssh #{ssh_args} \"#{command}\""
+    Printer.exec_puts("ssh #{ssh_args} \"#{command}\"")
   end
 
   def ssh_args
