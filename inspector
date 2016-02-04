@@ -1,13 +1,15 @@
 #!/usr/bin/env ruby
 require 'optparse'
-require 'rainbow'
 require 'resolv'
 require 'terminal-table'
-require_relative 'lib/inspect_config'
+require_relative 'lib/build_inspector'
+require_relative 'lib/configuration'
+require_relative 'lib/evidence_collector'
 require_relative 'lib/packet_inspector'
 require_relative 'lib/utils'
 require_relative 'lib/vagrant_whisperer'
 
+# Don't buffer output. Flush immediately.
 $stdout.sync = true
 
 options = {
@@ -21,8 +23,8 @@ optparse = OptionParser.new do |opts|
     exit
   end
 
-  opts.on('-n', '--no-rollback #',
-          "Don't rollback the virtual machine's state after running") do
+  opts.on('-n', '--no-rollback',
+          'Do not roll back the virtual machine state after running') do
     options[:rollback] = false
   end
 end
@@ -34,57 +36,27 @@ if ARGV.size < 1
   puts optparse.help
   exit(-1)
 end
+repo_url = ARGV.first
 
-repo_url = ARGV[0]
+whisperer = VagrantWhisperer.new
+config = Configuration.new('.inspect.yml')
+inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
+                               commands: config.commands, evidence_files: config.evidence_files,
+                               rollback: options[:rollback])
+
+whisperer.snapshot
+
+inspector.inspect
+
+repo_url = ARGV.first
 repo_name = repo_url.split('/').last.chomp('.git')
-REPO_DIR = "~/repo"
+evidence_name = "evidence-#{repo_name}-#{Utils.timestamp}"
+collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
 
-$config = InspectConfig.new
-$whisperer = VagrantWhisperer.new
+puts Utils.yellowify('Collecting evidence ...')
+collector.collect
 
-$whisperer.start_sandbox
-
-# Upload filelist of directories to include and exclude for rdiff-backup
-filelist = 'filelist'
-filelist_remote_path = File.join($whisperer.home, filelist)
-File.open filelist, 'w' do |f|
-  f.write($config.filelist.gsub(/\$HOME/, $whisperer.home))
-end
-$whisperer.send_file(filelist, filelist_remote_path)
-`rm #{filelist}`
-
-$whisperer.run desc: "Cloning #{repo_url} ..." do |commands|
-  commands << "git clone #{repo_url} #{REPO_DIR}"
-end
-
-$whisperer.run desc: 'Preparing file system snapshot ...' do |commands|
-  commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} / #{VagrantWhisperer::BACKUP_DIR}"
-end
-
-$whisperer.run desc: 'Starting network monitoring ...' do |commands|
-  commands << "sudo tcpdump -w #{VagrantWhisperer::EVIDENCE_DIR}/evidence.pcap -i eth0 > /dev/null 2>&1 &disown"
-  commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-before.txt"
-end
-
-$whisperer.run desc: 'Starting build ...' do |commands|
-  commands << "cd #{REPO_DIR}"
-  commands.concat([$config.script]).flatten! # $config.script may be a list
-  commands << Utils.yell('Done. Your build exited with $?.')
-end
-
-$whisperer.run desc: 'Comparing file system snapshots ...' do |commands|
-  commands << 'sudo pkill tcpdump'
-  commands << "ps --sort=lstart -eott,cmd > #{VagrantWhisperer::EVIDENCE_DIR}/ps-after.txt"
-  get_current_mirror = "`sudo rdiff-backup --list-increments #{VagrantWhisperer::BACKUP_DIR} |  awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
-  commands << "sudo rdiff-backup --include-filelist #{filelist_remote_path} --compare-at-time \"#{get_current_mirror}\" / #{VagrantWhisperer::BACKUP_DIR} > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff.txt"
-  commands << %Q~ruby -e 'IO.readlines("/evidence/fs-diff.txt").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u /backup/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{VagrantWhisperer::EVIDENCE_DIR}/fs-diff-with-changes.txt~
-end
-
-puts Utils.yellowify('Zipping and downloading evidences from vagrant image ...')
-zipfile = "#{Utils.timestamp}-#{repo_name}-evidence.zip"
-$local_evidence_dir = zipfile.chomp(File.extname(zipfile))
-$whisperer.collect_evidence(into = zipfile)
-Utils.unzip zipfile, $local_evidence_dir
+whisperer.rollback
 
 KILOBYTE = 1024.0
 
@@ -109,7 +81,7 @@ def print_outgoing_connections(pcap_file)
     addresses.each { |address| memo[address.to_s] = name }
   end
 
-  whitelist = $config.whitelist
+  whitelist = config.host_whitelist
 
   # whitelist the dns' ip as we wouldn't want it to show up
   dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
@@ -160,9 +132,8 @@ def print_processes_left_running
 end
 
 pcap_file = File.join $local_evidence_dir, 'evidence', 'evidence.pcap'
+
 print_outgoing_connections pcap_file
 print_fs_changes
 print_processes_left_running
 #print_processes
-
-$whisperer.rollback_sandbox if options[:rollback]

@@ -1,44 +1,46 @@
 require_relative 'utils'
 
 class VagrantWhisperer
-  EVIDENCE_DIR = '/evidence'
-  BACKUP_DIR = '/backup'
-  TMP_DIR = '/tmp'
+  TMP_PATH = '/tmp'
 
-  def initialize
+  def initialize(verbose: false)
+    # TODO: wire up verbose
+    @verbose = verbose
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
 
-  def run(opts = {})
+  def run(message: nil)
     return unless block_given?
-    puts Utils.yellowify(opts[:desc]) if opts.key? :desc
+    puts Utils.yellowify(message) if message
     commands = []
     yield commands
 
     file_path = 'tmp_runCommands.sh'
-    dest_path = File.join TMP_DIR, file_path
-    commands.unshift "#!/bin/bash"
+    dest_path = File.join(TMP_PATH, file_path)
+    # TODO: why unshift
+    commands.unshift('#!/bin/bash')
     commands << "rm #{dest_path}"
 
-    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write "#{cmd}\n" } }
+    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write("#{cmd}\n") } }
     send_file(file_path, dest_path)
     File.delete(file_path)
 
-    ssh_exec "bash #{dest_path}"
+    ssh_exec("bash #{dest_path}")
   end
 
-  def start_sandbox
+  def snapshot
     `vagrant sandbox on`
   end
 
-  def rollback_sandbox
+  def rollback
     puts Utils.yellowify('Rolling back virtual machine state ...')
     Utils.exec_puts 'vagrant sandbox rollback'
   end
 
   def run_and_get(commands)
+    # TODO: merge with run()
     file_path = 'tmp_runCommands.sh'
-    dest_path = File.join TMP_DIR, file_path
+    dest_path = File.join TMP_PATH, file_path
     commands.unshift "#!/bin/bash"
     commands << "rm #{dest_path}"
 
@@ -54,20 +56,6 @@ class VagrantWhisperer
     IO.popen(command).read
   end
 
-  def collect_evidence(into = "#{Utils.timestamp}-evidence.zip")
-    evidence_zip_path = "#{home}/#{into}"
-
-    zip(EVIDENCE_DIR, into = evidence_zip_path)
-
-    get_file(evidence_zip_path)
-  end
-
-  def zip(dir, into = dir)
-    zip_file = into
-    zip_file = "#{zip_file}.zip" if !zip_file.end_with? '.zip'
-    run { |c| c << "zip -r #{zip_file} #{dir} 2>&1 > /dev/null" }
-  end
-
   def send_file(local_path, remote_path)
     cmd = "scp #{ssh_opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
     `#{cmd}`
@@ -79,6 +67,7 @@ class VagrantWhisperer
   end
 
   def ip_address
+    # TODO: make identical to home
     @ip_address ||= `ssh #{ssh_args} \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
     @ip_address
   end
