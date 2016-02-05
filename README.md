@@ -14,7 +14,7 @@ the Sahara plugin, bundler and this project's dependencies.
 
 ```
 vagrant plugin install sahara
-git clone https://github.com/srcclr/build-inspector
+git clone https://github.com/srcclr/build-inspector.git
 gem install bundler
 bundle install
 ```
@@ -52,7 +52,7 @@ Usage inspector [options] <git repo URL>
 ### Gradle Example
 
 ```
-cp configs/gradle_inspect.yml .inspect.yml
+cp configs/gradle_template.yml config.yml
 ./inspector https://github.com/jsyeo/TotallyLegitApp.git
 ```
 
@@ -74,13 +74,13 @@ changed: ~/.bashrc
 ```
 
 In addition, you'll have a file that looks like
-`201523110032412-TotallyLegitApp-evidence.zip` which has all the
-network activity, file system changes, and any new processes.
+`evidence-TotallyLegitApp-201523110032412.zip` which has all the
+network and process activity, file system changes, and any new processes.
 
 ### Bundler Example
 
 ```
-cp configs/bundler_inspect.yml .inspect.yml
+cp configs/bundler_template.yml config.yml
 ./inspector https://github.com/jsyeo/harmless-project.git
 ```
 
@@ -98,7 +98,7 @@ The following hostnames were reached during the build process:
 ### NPM Example
 
 ```
-cp configs/npm_inspect.yml .inspect.yml
+cp configs/npm_template.yml config.yml
 ./inspector https://github.com/jsyeo/ann-pee-am
 ```
 
@@ -117,25 +117,25 @@ persistent backdoor using `netcat`.
 
 The tool monitors all network and file system activities. To ignore
 hosts or exclude directories from the monitoring, create and add an
-`.inspect.yml` in the repository. The `.inspect.yml' file is simply
+`config.yml` in the repository. The `config.yml' file is simply
 a YAML file that looks like this:
 
 ```
 ---
 
-script: bundle install --jobs 2
+commands: bundle install --jobs 2
 
-whitelist:
-  - 10.0.2.2
-  - 8.8.8.8
+host_whitelist:
+  - 10.0.2.2 # Vagrant's IP
+  - 8.8.8.8 # Ignore DNS
   - bundler.rubygems.org
-  - rubygems.org
   - rubygems.global.ssl.fastly.net
+  - rubygems.org
 
-directories:
-  excluded:
+evidence_files:
+  exclude:
     - /home/vagrant/.gem
-  included:
+  include:
     - /etc
 ```
 

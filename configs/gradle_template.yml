@@ -2,19 +2,24 @@
 
 # Configuration goes here
 
-script: gradle build
+commands: gradle build
 
-# Hosts that you want to ignore
-whitelist:
+# These hosts and IP addresses will be ignored by network monitoring.
+host_whitelist:
   - 10.0.2.2 # Virtualbox host machine's address
-  - services.gradle.org
   - downloads.gradle.org
   - repo1.maven.org
+  - services.gradle.org
 
-# Directories that you want to include or exclude from the inspection
-directories:
-  excluded:
+# Files or directories which should be included or excluded from evidence collection
+evidence_files:
+  exclude:
+    - /backup
     - /dev
+    - /evidence
+    - /home/vagrant/.npm
+    - /home/vagrant/repo
+    - /home/vagrant/tmp_runCommands.sh
     - /lost+found
     - /media
     - /mnt
@@ -24,15 +29,10 @@ directories:
     - /tmp
     - /vagrant
     - /var/lock
+    - /var/log
     - /var/run
     - /var/tmp
-    - /var/log
-    - /backup
-    - /evidence
-    - /home/vagrant/tmp_runCommands.sh
-    - /home/vagrant/repo
-    - /home/vagrant/.gradle
-  included:
+  include:
     - /bin
     - /boot
     - /etc

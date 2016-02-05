@@ -26,8 +26,8 @@ class EvidenceCollector
   private
 
   def copy_configuration
-    dest_file = File.join(@evidence_name, 'configuration.yml')
-    FileUtils.copy_file('.inspect.yml', dest_file)
+    dest_file = File.join(@evidence_name, 'config.yml')
+    FileUtils.copy_file('config.yml', dest_file)
   end
 
   def copy_snoopy_log

@@ -16,7 +16,7 @@ class BuildInspector
   def initialize(whisperer:, repo_url:, commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer
     @repo_url = repo_url
-    @commands = commands
+    @commands = Array(commands)
     @evidence_files = evidence_files
     @verbose = verbose
   end

@@ -19,7 +19,7 @@ class EvidenceProcessor
 
   private
 
-  def print_rocesses
+  def print_processes
     # open and parse snoopy file
   end
 

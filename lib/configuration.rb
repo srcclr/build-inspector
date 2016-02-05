@@ -1,7 +1,7 @@
 require 'yaml'
 
 class Configuration
-  def initialize(config = '.inspect.yml')
+  def initialize(config = 'config.yml')
     @config = YAML.load_file(config) if File.exist?(config)
     @config ||= {}
     @config['evidence_files'] ||= {}

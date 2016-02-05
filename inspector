@@ -37,7 +37,7 @@ end
 repo_url = ARGV.first
 
 whisperer = VagrantWhisperer.new
-config = Configuration.new('.inspect.yml')
+config = Configuration.new('config.yml')
 inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
                                commands: config.commands, evidence_files: config.evidence_files)
 
