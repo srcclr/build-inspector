@@ -1,5 +1,5 @@
 .vagrant
-evidence/
+evidence-*/
 *.zip
 *.pcap
 .inspect.yml
