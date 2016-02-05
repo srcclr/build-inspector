@@ -1,16 +1,13 @@
 #!/usr/bin/env ruby
 require 'optparse'
-require 'resolv'
-require 'terminal-table'
 require_relative 'lib/build_inspector'
 require_relative 'lib/configuration'
 require_relative 'lib/evidence_collector'
 require_relative 'lib/evidence_processor'
-require_relative 'lib/packet_inspector'
 require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
 
-# Don't buffer output. Flush immediately.
+# Don't buffer output; flush it immediately.
 $stdout.sync = true
 
 options = {

@@ -1,3 +1,4 @@
+require 'resolv'
 require_relative 'build_inspector'
 
 class EvidenceProcessor
@@ -10,7 +11,7 @@ class EvidenceProcessor
   end
 
   def process
-    print_all_processes
+    print_processes
     print_connections
     print_filesystem_changes
     print_running_processes
@@ -18,7 +19,7 @@ class EvidenceProcessor
 
   private
 
-  def print_all_processes
+  def print_rocesses
     # open and parse snoopy file
   end
 

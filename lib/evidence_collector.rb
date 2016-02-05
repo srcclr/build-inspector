@@ -11,6 +11,8 @@ class EvidenceCollector
   end
 
   def collect
+    copy_snoopy_log
+
     zip_name = "#{@evidence_name}.zip"
     remote_zip_path = "#{@whisperer.home}/#{zip_name}"
     zip(BuildInspector::EVIDENCE_PATH, remote_zip_path)
@@ -19,7 +21,6 @@ class EvidenceCollector
 
     # Call these after unzipping so target directory will exist
     copy_configuration
-    get_snoopy_log
   end
 
   private
@@ -29,8 +30,8 @@ class EvidenceCollector
     FileUtils.copy_file('.inspect.yml', dest_file)
   end
 
-  def get_snoopy_log
-    @whisperer.run { |c| c << "sudo /var/log/snoopy.log #{BuildInspector::EVIDENCE_PATH}" }
+  def copy_snoopy_log
+    @whisperer.run(message: "copying snoopy file WORK") { |c| c << "sudo cp /var/log/snoopy.log #{BuildInspector::EVIDENCE_PATH}" }
   end
 
   def zip(target, zip_path)

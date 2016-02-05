@@ -33,3 +33,7 @@ chmod +x snoopy-install.sh
 ./snoopy-install.sh stable
 echo 'output = file:/var/log/snoopy.log' >> /etc/snoopy.ini
 rm -rf snoopy-*
+
+# Log file must be fairly writable or you'll only get root processes
+touch /var/log/snoopy.log
+chmod 0666 /var/log/snoopy.log

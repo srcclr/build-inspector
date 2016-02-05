@@ -24,9 +24,9 @@ class BuildInspector
   def inspect
     clone_repo
     snapshot_filesystem
-    start_network_monitoring
+    start_monitoring
     build
-    stop_network_monitoring
+    stop_monitoring
     get_filesystem_changes
   end
 
@@ -56,10 +56,11 @@ class BuildInspector
     File.join(VagrantWhisperer::TMP_PATH, 'evidence-files.txt')
   end
 
-  def start_network_monitoring
-    @whisperer.run(message: 'Starting network monitoring ...') do |commands|
+  def start_monitoring
+    @whisperer.run(message: 'Preparing network and process monitoring ...') do |commands|
       commands << "sudo tcpdump -w #{EVIDENCE_PATH}/traffic.pcap -i eth0 > /dev/null 2>&1 &disown"
       commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/#{PROCESSES_BEFORE_FILE}"
+      commands << "truncate -s 0 /var/log/snoopy.log"
     end
   end
 
@@ -71,7 +72,7 @@ class BuildInspector
     end
   end
 
-  def stop_network_monitoring
+  def stop_monitoring
     @whisperer.run(message: 'Stopping network monitoring ...') do |commands|
       commands << 'sudo pkill tcpdump'
       commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/#{PROCESSES_AFTER_FILE}"
