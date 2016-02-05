@@ -16,9 +16,10 @@ class BuildInspector
   PROCESSES_AFTER_FILE = 'ps-after.txt'
   PROCESSES_FILE = 'snoopy.log'
 
-  def initialize(whisperer:, repo_url:, commands:, evidence_files: '', verbose: false)
+  def initialize(whisperer:, repo_url:, repo_branch: 'master', commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer
     @repo_url = repo_url
+    @repo_branch = repo_branch
     @commands = Array(commands)
     @evidence_files = evidence_files
     @verbose = verbose
@@ -36,8 +37,8 @@ class BuildInspector
   private
 
   def clone_repo
-    @whisperer.run(message: "Cloning #{@repo_url} ...") do |commands|
-      commands << "git clone #{@repo_url} #{REPO_PATH}"
+    @whisperer.run(message: "Cloning #{@repo_url}:#{@repo_branch} ...") do |commands|
+      commands << "git clone --recursive --depth=50 --branch=#{@repo_branch} #{@repo_url} #{REPO_PATH}"
     end
   end
 
@@ -70,6 +71,7 @@ class BuildInspector
   def build
     @whisperer.run(message: 'Starting build ...') do |commands|
       commands << "cd #{REPO_PATH}"
+      commands << "git submodule init"
       commands.concat(@commands)
       commands << Printer.yell('Done. Your build exited with $?.')
     end

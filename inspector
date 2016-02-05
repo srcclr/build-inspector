@@ -13,6 +13,7 @@ $stdout.sync = true
 options = {
   rollback: true,
   config: 'config.yml',
+  branch: 'master',
   only_process: nil,
 }
 
@@ -36,6 +37,11 @@ optparse = OptionParser.new do |opts|
   opts.on('-p', '--process <PATH>', String,
           "Only process evidence at <PATH>") do |evidence_path|
     options[:only_process] = evidence_path
+  end
+
+  opts.on('-b', '--branch <BRANCH>', String,
+          "Clone <BRANCH> from repository URL") do |branch|
+    options[:branch] = branch
   end
 end
 optparse.parse!
@@ -62,7 +68,7 @@ if ARGV.size < 1
 end
 
 repo_url = ARGV.first
-inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
+inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url, repo_branch: options[:branch],
                                commands: config.commands, evidence_files: config.evidence_files)
 
 whisperer.snapshot
