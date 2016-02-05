@@ -42,8 +42,7 @@ repo_url = ARGV.first
 whisperer = VagrantWhisperer.new
 config = Configuration.new('.inspect.yml')
 inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url,
-                               commands: config.commands, evidence_files: config.evidence_files,
-                               rollback: options[:rollback])
+                               commands: config.commands, evidence_files: config.evidence_files)
 
 whisperer.snapshot
 

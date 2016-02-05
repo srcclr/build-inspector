@@ -69,14 +69,12 @@ class VagrantWhisperer
   end
 
   def ip_address
-    # TODO: make identical to home
-    @ip_address ||= `ssh #{ssh_args} \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
-    @ip_address
+    get_ip_cmd = "ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'"
+    @ip_address ||= run_and_get([get_ip_cmd]).strip.split.first
   end
 
   def home
     @home ||= run_and_get(['echo $HOME']).strip
-    @home
   end
 
   private

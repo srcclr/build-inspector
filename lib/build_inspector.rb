@@ -9,15 +9,15 @@ class BuildInspector
 
   PCAP_FILE = 'traffic.pcap'
   FILESYSTEM_DIFF_FILE = 'filesystem-diff.txt'
+  FILESYSTEM_CHANGES_FILE ='filesystem-changes.txt'
   PROCESSES_BEFORE_FILE = 'ps-before.txt'
   PROCESSES_AFTER_FILE = 'ps-after.txt'
 
-  def initialize(whisperer:, repo_url:, commands:, evidence_files: '', rollback: true, verbose: false)
+  def initialize(whisperer:, repo_url:, commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer
     @repo_url = repo_url
     @commands = commands
     @evidence_files = evidence_files
-    @rollback = rollback
     @verbose = verbose
   end
 
@@ -68,7 +68,6 @@ class BuildInspector
       commands << "cd #{REPO_PATH}"
       commands.concat(@commands)
       commands << Printer.yell('Done. Your build exited with $?.')
-      p commands
     end
   end
 
@@ -83,8 +82,11 @@ class BuildInspector
     @whisperer.run(message: 'Generating file system changes ...') do |commands|
       get_current_mirror = "`sudo rdiff-backup --list-increments #{BACKUP_PATH} | awk -F\": \" '$1 == \"Current mirror\" {print $2}'`"
       commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} --compare-at-time \"#{get_current_mirror}\" #{RDIFF_TARGET} #{BACKUP_PATH} > #{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}"
-      # TODO: do this locally rather than remotely
-      commands << %Q~ruby -e 'IO.readlines("#{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{EVIDENCE_PATH}/fs-diff-with-changes.txt~
+
+      # This MUST happen remotely, even though it's ugly, because it:
+      # Uses diff, which may not be on host OS
+      # May need to compare files against those in BACKUP_PATH
+      commands << %Q~ruby -e 'IO.readlines("#{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f} ` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}' > #{EVIDENCE_PATH}/#{FILESYSTEM_CHANGES_FILE}~
     end
   end
 end

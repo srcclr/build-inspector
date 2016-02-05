@@ -4,33 +4,28 @@ class EvidenceProcessor
   KILOBYTE = 1024.0
 
   def initialize(evidence_path:, vagrant_ip:, host_whitelist:)
-    @evidence_path = evidence_path
+    @evidence_path = File.join(evidence_path, 'evidence')
     @vagrant_ip = vagrant_ip
     @host_whitelist = host_whitelist
   end
 
   def process
-    pcap_file = File.join(@evidence_path, 'evidence', BuildInspector::PCAP_FILE)
-    print_outgoing_connections(pcap_file, @vagrant_ip, @host_whitelist)
-
-    diff_file = File.join(@evidence_path, 'evidence', 'fs-diff-with-changes.txt')
-    print_fs_changes(diff_file)
-
-    procs_before_file = File.join(@evidence_path, 'evidence', BuildInspector::PROCESSES_BEFORE_FILE)
-    procs_after_file = File.join(@evidence_path, 'evidence', BuildInspector::PROCESSES_AFTER_FILE)
-    print_processes_left_running(procs_before_file, procs_after_file)
+    print_all_processes
+    print_connections
+    print_filesystem_changes
+    print_running_processes
   end
 
   private
 
-  def prettify(size)
-    return size.to_s + 'B' if size < 1000
-    (size / KILOBYTE).round(1).to_s + 'K'
+  def print_all_processes
+    # open and parse snoopy file
   end
 
-  def print_outgoing_connections(pcap_file, vagrant_ip, whitelist)
-    packet_inspector = PacketInspector.new pcap_file
-    outgoing_packets = packet_inspector.packets_from vagrant_ip
+  def print_connections
+    pcap_file = File.join(@evidence_path, BuildInspector::PCAP_FILE)
+    packet_inspector = PacketInspector.new(pcap_file)
+    outgoing_packets = packet_inspector.packets_from(@vagrant_ip)
 
     ips_sizes = outgoing_packets.each_with_object(Hash.new(0)) do |packet, memo|
       memo[packet.ip_dst_readable] += packet.size
@@ -45,33 +40,51 @@ class EvidenceProcessor
 
     # Whitelist the DNS' IP also; don't want it showing up
     dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
+    whitelist = @host_whitelist
     whitelist += dns_server if dns_server
 
     not_in_whitelist = ips_sizes.map { |ip, size| [address_to_name.fetch(ip, ip), ip, size] }
                                 .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
     return if not_in_whitelist.empty?
 
-    puts Printer.yellowify('The following hostnames were contact during the build:')
+    puts Printer.yellowify('Hosts contacted during the build:')
     not_in_whitelist.each do |hostname, ip, size|
       name_ip = "#{hostname} (#{ip})".ljust(60)
       puts "  #{name_ip} #{prettify(size).rjust(10)}"
     end
   end
 
-  def print_fs_changes(diff_file)
-    puts Printer.yellowify('The file system was changed at these places:')
-    File.foreach(diff_file) { |x| puts x }
+  def prettify(size)
+    return size.to_s + 'B' if size < 1000
+    (size / KILOBYTE).round(1).to_s + 'K'
   end
 
-  def print_processes_left_running(procs_before_file, procs_after_file)
+  def print_filesystem_changes
+    changes_file = File.join(@evidence_path, BuildInspector::FILESYSTEM_CHANGES_FILE)
+    lines = IO.readlines(changes_file)
+
+    # Skip these lines; they are meaningless.
+    lines -= [
+      "changed: home/vagrant\n",
+      "No changes found.  Directory matches archive data.\n",
+    ]
+
+    return if lines.empty?
+
+    puts Printer.yellowify('File system changes:')
+    lines.each { |line| puts line }
+  end
+
+  def print_running_processes
+    procs_before_file = File.join(@evidence_path, BuildInspector::PROCESSES_BEFORE_FILE)
+    procs_after_file = File.join(@evidence_path, BuildInspector::PROCESSES_AFTER_FILE)
+
     procs_before = File.readlines(procs_before_file)
     procs_after = File.readlines(procs_after_file)
-    #puts procs_after.size
-    #puts procs_before.size
     new_procs = procs_after - procs_before
-    #puts "new procs: #{new_procs}"
     return if new_procs.empty?
-    puts Printer.yellowify('The following new processes were running after the build:')
+
+    puts Printer.yellowify('New processes running after the build:')
     new_procs.flatten.each do |proc|
       puts "  - #{proc}"
     end
