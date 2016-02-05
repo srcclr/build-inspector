@@ -1,5 +1,6 @@
 require 'resolv'
 require_relative 'build_inspector'
+require_relative 'packet_inspector'
 
 class EvidenceProcessor
   KILOBYTE = 1024.0

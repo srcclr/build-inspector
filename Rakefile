@@ -1,6 +1,8 @@
+require 'rake'
+require 'optparse'
 require_relative 'lib/printer'
 
-namespace :v do
+namespace :vagrant do
   desc 'Restores the previously committed machine state'
   task :rollback do
     Printer.exec_puts('vagrant sandbox rollback')

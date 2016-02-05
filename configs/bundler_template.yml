@@ -15,7 +15,7 @@ evidence_files:
     - /backup
     - /dev
     - /evidence
-    - /home/vagrant/.npm
+    - /home/vagrant/.gem
     - /home/vagrant/repo
     - /home/vagrant/tmp_runCommands.sh
     - /lost+found
