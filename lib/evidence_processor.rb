@@ -47,6 +47,11 @@ class EvidenceProcessor
       lines -= lines.grep(filter)
     end
 
+    filtered_path = File.join(@evidence_path, "filtered-commands.txt")
+    File.open(filtered_path, 'w') do |f|
+      lines.each { |l| f.write(l) }
+    end
+
     puts Printer.yellowify('Filtered commands executed:')
     lines.each { |line| puts "  #{line}"}
   end
