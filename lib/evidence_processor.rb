@@ -5,6 +5,26 @@ require_relative 'packet_inspector'
 class EvidenceProcessor
   KILOBYTE = 1024.0
 
+  SNOOPY_FILTER = [
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/rm\]: rm /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c scp -t /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/scp\]: scp -t /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c bash /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo rdiff-backup --list-increments /backup\n\z~,
+    %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/rdiff-backup\]: rdiff-backup --list-increments /backup\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo rdiff-backup --include-filelist /tmp/evidence-files\.txt --compare-at-time [^/]+/ /backup\n\z~,
+    %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/rdiff-backup\]: rdiff-backup --include-filelist /tmp/evidence-files\.txt --compare-at-time [^/]+/ /backup\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/ruby\]: #{Regexp.escape("ruby -e " + BuildInspector::DIFF_RUBY).tr("'", '')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo pkill tcpdump\n\z~,
+    %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/pkill\]: pkill tcpdump\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/ps\]: ps --sort=lstart -eott,cmd\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/awk\]: awk -F:  \$1 == "Current mirror" {print \$2}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/diff\]: diff -u /backup/home/vagrant/\.bashrc /home/vagrant/\.bashrc\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo cp /var/log/snoopy\.log /evidence\n\z~,
+    %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cp\]: cp /var/log/snoopy\.log /evidence\n\z~,
+  ]
+
   def initialize(evidence_path:, vagrant_ip:, host_whitelist:)
     @evidence_path = File.join(evidence_path, 'evidence')
     @vagrant_ip = vagrant_ip
@@ -21,7 +41,14 @@ class EvidenceProcessor
   private
 
   def print_processes
-    # open and parse snoopy file
+    snoopy_path = File.join(@evidence_path, BuildInspector::PROCESSES_FILE)
+    lines = IO.readlines(snoopy_path)
+    SNOOPY_FILTER.each do |filter|
+      lines -= lines.grep(filter)
+    end
+
+    puts Printer.yellowify('Filtered commands executed:')
+    lines.each { |line| puts "  #{line}"}
   end
 
   def print_connections
@@ -49,7 +76,7 @@ class EvidenceProcessor
                                 .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
     return if not_in_whitelist.empty?
 
-    puts Printer.yellowify('Hosts contacted during the build:')
+    puts Printer.yellowify('Hosts contacted:')
     not_in_whitelist.each do |hostname, ip, size|
       name_ip = "#{hostname} (#{ip})".ljust(60)
       puts "  #{name_ip} #{prettify(size).rjust(10)}"
