@@ -1,13 +1,12 @@
 ---
 
-# Configuration goes here
-
 commands: gradle build
 
-# These hosts and IP addresses will be ignored by network monitoring.
+# Exclude these hosts and IP addresses from network monitoring
 host_whitelist:
-  - 10.0.2.2 # Virtualbox host machine's address
+  - 10.0.2.2 # VirtualBox's address
   - downloads.gradle.org
+  - repo.maven.apache.org
   - repo1.maven.org
   - services.gradle.org
 

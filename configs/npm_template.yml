@@ -3,9 +3,9 @@
 commands:
   - npm install
 
-# These hosts and IP addresses will be ignored by network monitoring.
+# Exclude these hosts and IP addresses from network monitoring
 host_whitelist:
-  - 10.0.2.2 # Virtualbox host machine's address
+  - 10.0.2.2 # VirtualBox's address
   - registry.npmjs.org
 
 # Files or directories which should be included or excluded from evidence collection
