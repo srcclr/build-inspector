@@ -29,7 +29,7 @@ apt-get update
 
 echo "Installing dependencies"
 apt-get install -y build-essential git-core zlib1g-dev libssl-dev \
-  libreadline-dev libyaml-dev subversion maven2 gradle-2.7 nodejs rdiff-backup \
+  libreadline-dev libyaml-dev subversion maven gradle-2.7 nodejs rdiff-backup \
   zip libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev \
   libcurl4-openssl-dev libffi-dev openjdk-8-jdk
 
