@@ -31,7 +31,7 @@ class EvidenceCollector
   end
 
   def copy_snoopy_log
-    @whisperer.run(message: "copying snoopy file WORK") { |c| c << "sudo cp /var/log/snoopy.log #{BuildInspector::EVIDENCE_PATH}" }
+    @whisperer.run { |c| c << "sudo cp /var/log/snoopy.log #{BuildInspector::EVIDENCE_PATH}" }
   end
 
   def zip(target, zip_path)

@@ -15,20 +15,26 @@ echo "Stopping Puppet and Chef"
 service puppet stop
 service chef-client stop
 
-echo "Adding chis-lea's node.js repository"
+echo "Adding APT repositories"
 add-apt-repository -y ppa:chris-lea/node.js
 
 # For gradle 2.x
-sudo add-apt-repository ppa:cwchien/gradle
+add-apt-repository ppa:cwchien/gradle
 
-echo "Updating apt package list"
+# For openjdk-8-jdk
+add-apt-repository ppa:openjdk-r/ppa
+
+echo "Updating APT package list"
 apt-get update
 
 echo "Installing dependencies"
 apt-get install -y build-essential git-core zlib1g-dev libssl-dev \
   libreadline-dev libyaml-dev subversion maven2 gradle-2.7 nodejs rdiff-backup \
   zip libsqlite3-dev sqlite3 libxml2-dev libxslt1-dev \
-  libcurl4-openssl-dev libffi-dev openjdk-7-jdk
+  libcurl4-openssl-dev libffi-dev openjdk-8-jdk
+
+# Set Java 8 as default
+update-alternatives --set java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 
 echo "Installing Snoopy"
 wget -O snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
