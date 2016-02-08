@@ -51,7 +51,7 @@ class BuildInspector
     local_list.close
     local_list.unlink
 
-    @whisperer.run(message: 'Preparing file system snapshot ...') do |commands|
+    @whisperer.run(message: 'Preparing file system snapshot (this may take a while) ...') do |commands|
       commands << "sudo rdiff-backup --include-filelist #{rdiff_filelist_path} #{RDIFF_TARGET} #{BACKUP_PATH}"
     end
   end

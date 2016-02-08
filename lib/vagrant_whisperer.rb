@@ -2,6 +2,7 @@ require_relative 'printer'
 
 class VagrantWhisperer
   TMP_PATH = '/tmp'
+  TMP_CMDS = "#{TMP_PATH}/vagrantCommands.sh"
 
   def initialize(verbose: false)
     # TODO: wire up verbose
@@ -9,25 +10,23 @@ class VagrantWhisperer
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
 
-  def run(message: nil)
+  def run(message: nil, stream: false)
     return unless block_given?
     puts Printer.yellowify(message) if message
     commands = []
     yield commands
 
-    remote_path = File.join(TMP_PATH, 'tmp_runCommands.sh')
-    commands.unshift('#!/bin/bash')
-    commands << "rm #{remote_path}"
-
     tf = Tempfile.new('inspector-commands')
+    tf.write("#!/bin/bash\n")
     commands.each { |cmd| tf.write("#{cmd}\n") }
+    tf.write("rm #{TMP_CMDS}")
     tf.rewind
 
-    send_file(tf.path, remote_path)
+    send_file(tf.path, TMP_CMDS)
     tf.close
     tf.unlink
 
-    ssh_exec("bash #{remote_path}")
+    ssh_exec("bash -l #{TMP_CMDS}", stream: stream)
   end
 
   def snapshot
@@ -37,25 +36,6 @@ class VagrantWhisperer
   def rollback
     puts Printer.yellowify('Rolling back virtual machine state ...')
     Printer.exec_puts 'vagrant sandbox rollback'
-  end
-
-  def run_and_get(commands)
-    # TODO: merge with run()
-    file_path = 'tmp_runCommands.sh'
-    dest_path = File.join TMP_PATH, file_path
-    commands.unshift "#!/bin/bash"
-    commands << "rm #{dest_path}"
-
-    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write "#{cmd}\n" } }
-    send_file(file_path, dest_path)
-    File.delete(file_path)
-
-    ssh_exec("chmod +x #{dest_path}")
-
-    # Stream output as we get it
-    $stdout.sync = true
-    command = "ssh #{ssh_args} #{dest_path}"
-    IO.popen(command).read
   end
 
   def send_file(local_path, remote_path)
@@ -69,18 +49,24 @@ class VagrantWhisperer
   end
 
   def ip_address
-    get_ip_cmd = "ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'"
-    @ip_address ||= run_and_get([get_ip_cmd]).strip.split.first
+    cmd = "ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'"
+    @ip_address ||= run(stream: true) { |c| c << cmd }.rstrip
   end
 
   def home
-    @home ||= run_and_get(['echo $HOME']).strip
+    @home ||= run(stream: true) { |c| c << 'echo $HOME' }.rstrip
   end
 
   private
 
-  def ssh_exec(command)
-    Printer.exec_puts("ssh #{ssh_args} \"#{command}\"")
+  def ssh_exec(command, stream: false)
+    full_cmd = "ssh #{ssh_args} \"#{command}\""
+    if stream
+      $stdout.sync = true
+      IO.popen(full_cmd).read
+    else
+      Printer.exec_puts(full_cmd)
+    end
   end
 
   def ssh_args
@@ -102,10 +88,10 @@ class VagrantWhisperer
     # Silence ssh logging
     ssh_opts['LogLevel'] = 'QUIET'
 
-#    # Multiplex for faster ssh connections
-#    ssh_opts['ControlPath']    = '~/.ssh/%r@%h:%p'
-#    ssh_opts['ControlMaster']  = 'auto'
-#    ssh_opts['ControlPersist'] = '10m'
+    # Multiplex for faster ssh connections
+    ssh_opts['ControlPath']    = '~/.ssh/%r@%h:%p'
+    ssh_opts['ControlMaster']  = 'auto'
+    ssh_opts['ControlPersist'] = '10m'
 
     # Remove Host directive as it doesn't work on some systems
     ssh_opts.tap { |opts| opts.delete('Host') }

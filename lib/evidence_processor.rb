@@ -6,11 +6,11 @@ class EvidenceProcessor
   KILOBYTE = 1024.0
 
   SNOOPY_FILTER = [
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/rm\]: rm /tmp/tmp_runCommands\.sh\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c scp -t /tmp/tmp_runCommands\.sh\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/scp\]: scp -t /tmp/tmp_runCommands\.sh\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c bash /tmp/tmp_runCommands\.sh\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash /tmp/tmp_runCommands\.sh\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/rm\]: rm #{Regexp.escape(VagrantWhisperer::TMP_CMDS)}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c scp -t #{Regexp.escape(VagrantWhisperer::TMP_CMDS)}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/scp\]: scp -t #{Regexp.escape(VagrantWhisperer::TMP_CMDS)}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -c bash -l #{Regexp.escape(VagrantWhisperer::TMP_CMDS)}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/bash\]: bash -l #{Regexp.escape(VagrantWhisperer::TMP_CMDS)}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo rdiff-backup --list-increments /backup\n\z~,
     %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/rdiff-backup\]: rdiff-backup --list-increments /backup\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo rdiff-backup --include-filelist /tmp/evidence-files\.txt --compare-at-time [^/]+/ /backup\n\z~,
