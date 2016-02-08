@@ -1,9 +1,5 @@
-# Ignore any local Vagrant data
 .vagrant
-
-# Ignore any generated evidence files
-evidence-*/
-evidence-*.zip
-
-# Ignore local configuration
-config.yml
+evidence/
+*.zip
+*.pcap
+.inspect.yml

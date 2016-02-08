@@ -1,56 +1,44 @@
-require_relative 'printer'
+require './utils'
 
 class VagrantWhisperer
-  TMP_PATH = '/tmp'
 
-  def initialize(verbose: false)
-    # TODO: wire up verbose
-    @verbose = verbose
+  EVIDENCE_DIR = '/evidence'
+  BACKUP_DIR = '/backup'
+  TMP_DIR = '/tmp'
+
+  def initialize
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
 
-  def run(message: nil)
-    return unless block_given?
-    puts Printer.yellowify(message) if message
+  def run(opts = {})
+    return if !block_given?
+    puts Utils.yellowify(opts[:desc]) if opts.key? :desc
     commands = []
     yield commands
 
-    remote_path = File.join(TMP_PATH, 'tmp_runCommands.sh')
-    commands.unshift('#!/bin/bash')
-    commands << "rm #{remote_path}"
-
-    tf = Tempfile.new('inspector-commands')
-    commands.each { |cmd| tf.write("#{cmd}\n") }
-    tf.rewind
-
-    send_file(tf.path, remote_path)
-    tf.close
-    tf.unlink
-
-    ssh_exec("bash #{remote_path}")
-  end
-
-  def snapshot
-    `vagrant sandbox on`
-  end
-
-  def rollback
-    puts Printer.yellowify('Rolling back virtual machine state ...')
-    Printer.exec_puts 'vagrant sandbox rollback'
-  end
-
-  def run_and_get(commands)
-    # TODO: merge with run()
     file_path = 'tmp_runCommands.sh'
-    dest_path = File.join TMP_PATH, file_path
+    dest_path = File.join TMP_DIR, file_path
     commands.unshift "#!/bin/bash"
     commands << "rm #{dest_path}"
 
     File.open(file_path, 'w') { |f| commands.each { |cmd| f.write "#{cmd}\n" } }
-    send_file(file_path, dest_path)
+    sendFile(file_path, dest_path)
     File.delete(file_path)
 
-    ssh_exec("chmod +x #{dest_path}")
+    ssh_exec "bash #{dest_path}"
+  end
+
+  def run_and_get(commands)
+    file_path = 'tmp_runCommands.sh'
+    dest_path = File.join TMP_DIR, file_path
+    commands.unshift "#!/bin/bash"
+    commands << "rm #{dest_path}"
+
+    File.open(file_path, 'w') { |f| commands.each { |cmd| f.write "#{cmd}\n" } }
+    sendFile(file_path, dest_path)
+    File.delete(file_path)
+
+    ssh_exec "chmod +x #{dest_path}"
 
     # Stream output as we get it
     $stdout.sync = true
@@ -58,29 +46,44 @@ class VagrantWhisperer
     IO.popen(command).read
   end
 
-  def send_file(local_path, remote_path)
+  def collectEvidence(into = "#{Utils.timestamp}-evidence.zip")
+    evidence_zip_path = "#{home}/#{into}"
+
+    zip(EVIDENCE_DIR, into = evidence_zip_path)
+
+    getFile(evidence_zip_path)
+  end
+
+  def zip(dir, into = dir)
+    zip_file = into
+    zip_file = "#{zip_file}.zip" if !zip_file.end_with? '.zip'
+    run { |c| c << "zip -r #{zip_file} #{dir} 2>&1 > /dev/null" }
+  end
+
+  def sendFile(local_path, remote_path)
     cmd = "scp #{ssh_opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
     `#{cmd}`
   end
 
-  def get_file(remote_path, local_path = '.')
+  def getFile(remote_path, local_path = '.')
     cmd = "scp #{ssh_opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path} #{local_path}"
     `#{cmd}`
   end
 
   def ip_address
-    get_ip_cmd = "ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'"
-    @ip_address ||= run_and_get([get_ip_cmd]).strip.split.first
+    @ip_address ||= `ssh #{ssh_args} \"ip address show eth0 | grep 'inet ' | sed -e 's/^.*inet //' -e 's/\\/.*$//'\"`.strip.split.first
+    @ip_address
   end
 
   def home
     @home ||= run_and_get(['echo $HOME']).strip
+    @home
   end
 
   private
 
   def ssh_exec(command)
-    Printer.exec_puts("ssh #{ssh_args} \"#{command}\"")
+    Utils.exec_puts "ssh #{ssh_args} \"#{command}\""
   end
 
   def ssh_args

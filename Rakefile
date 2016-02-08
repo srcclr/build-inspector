@@ -1,28 +1,26 @@
-require 'rake'
-require 'optparse'
-require_relative 'lib/printer'
+require './utils'
 
-namespace :vagrant do
+namespace :v do
   desc 'Restores the previously committed machine state'
   task :rollback do
-    Printer.exec_puts('vagrant sandbox rollback')
+    Utils.exec_puts 'vagrant sandbox rollback'
   end
 
   desc "Commits the machine's state. Future rollbacks will go to this state"
   task :commit do
-    Printer.exec_puts('vagrant sandbox commit')
+    Utils.exec_puts 'vagrant sandbox commit'
   end
 
   task :halt do
-    Printer.exec_puts('vagrant halt')
+    Utils.exec_puts 'vagrant halt'
   end
 
   task :up do
-    Printer.exec_puts('vagrant up')
+    Utils.exec_puts 'vagrant up'
   end
 
   task :destroy do
-    Printer.exec_puts('vagrant destroy -f')
+    Utils.exec_puts 'vagrant destroy -f'
   end
 
   desc 'Equivalent to a `vagrant destroy && vagrant up`'
@@ -30,6 +28,6 @@ namespace :vagrant do
 
   desc 'Equivalent to a `vagrant halt && vagrant up`'
   task :reload do
-    Printer.exec_puts('vagrant reload')
+    Utils.exec_puts 'vagrant reload'
   end
 end

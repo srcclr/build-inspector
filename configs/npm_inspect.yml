@@ -1,22 +1,19 @@
 ---
 
-commands:
+# Configurations goes here
+
+script:
   - npm install
 
-# These hosts and IP addresses will be ignored by network monitoring.
-host_whitelist:
+# Hosts that you want to ignore
+whitelist:
   - 10.0.2.2 # Virtualbox host machine's address
   - registry.npmjs.org
 
-# Files or directories which should be included or excluded from evidence collection
-evidence_files:
-  exclude:
-    - /backup
+# Directories that you want to include or exclude from the inspection
+directories:
+  excluded:
     - /dev
-    - /evidence
-    - /home/vagrant/.npm
-    - /home/vagrant/repo
-    - /home/vagrant/tmp_runCommands.sh
     - /lost+found
     - /media
     - /mnt
@@ -26,10 +23,15 @@ evidence_files:
     - /tmp
     - /vagrant
     - /var/lock
-    - /var/log
     - /var/run
     - /var/tmp
-  include:
+    - /var/log
+    - /backup
+    - /evidence
+    - /home/vagrant/tmp_runCommands.sh
+    - /home/vagrant/repo
+    - /home/vagrant/.npm
+  included:
     - /bin
     - /boot
     - /etc
@@ -42,3 +44,4 @@ evidence_files:
     - /srv
     - /usr
     - /var
+
