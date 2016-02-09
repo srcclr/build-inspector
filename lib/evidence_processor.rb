@@ -23,7 +23,6 @@ class EvidenceProcessor
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/diff\]: diff -u /backup/home/vagrant/\.bashrc /home/vagrant/\.bashrc\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo cp /var/log/snoopy\.log /evidence\n\z~,
     %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cp\]: cp /var/log/snoopy\.log /evidence\n\z~,
-
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cat\]: cat /home/vagrant/\.rvm/(RELEASE|VERSION)\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/grep\]: grep DISTRIB_ID=Ubuntu /etc/lsb-release\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/grep\]: #{Regexp.escape('grep ^\s*rvm .*$ /home/vagrant/.rvmrc')}\n\z~,
@@ -33,19 +32,22 @@ class EvidenceProcessor
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_name_lowercase=# { s#^system_name_lowercase=##;; p; } -e /^$/d')}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_type=# { s#^system_type=##;; p; } -e /^$/d')}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_version=# { s#^system_version=##;; p; } -e /^$/d')}\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/uname\]: uname(?: -(?:a|m))?\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/sed\]: #{Regexp.escape('sed -e s/-/ /')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/uname\]:~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/home/vagrant/\.rvm/rubies/ruby-[\d\.]+/bin/ruby\]: #{Regexp.escape("ruby -e " + BuildInspector::DIFF_RUBY).tr("'", '')}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/awk\]: #{Regexp.escape('awk -F= $1=="DISTRIB_RELEASE"{print $2} /etc/lsb-release')}\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/dirname\]: dirname /home/vagrant/\.rvm\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/dirname\]:~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/dpkg\]: dpkg --print-architecture\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/head\]: head -n 1\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/locale\]: locale\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/locale\]:~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/tr\]: #{Regexp.escape('tr [A-Z] [a-z]')}\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/usr/bin/which\]: which (sudo|whence|which|java)\n\z~,
-
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/find\]: #{Regexp.escape('find -L /home/vagrant/.rvm/hooks -iname after_cd* -type f')}\n\z~,
-    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/basename\]: basename /usr/bin/gradle\n\z~,
-
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/usr/bin/which\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/find\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/basename\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/lib/git-core/git\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/bin/ls\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/expr\]:~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/dirname\]:~,
   ]
 
   def initialize(evidence_path:, vagrant_ip:, host_whitelist:)
@@ -68,6 +70,18 @@ class EvidenceProcessor
     lines = IO.readlines(snoopy_path)
     SNOOPY_FILTER.each do |filter|
       lines -= lines.grep(filter)
+    end
+
+    perl_lines = lines.select { |l| l.include?('filename:/usr/bin/perl]: /usr/bin/perl -e') }
+    require 'digest'
+    sha256 = Digest::SHA256.new
+    perl_lines.each do |pl|
+      idx = lines.find_index(pl)
+      next unless idx
+      perl = lines[idx..29] * ''
+      digest = sha256.hexdigest(perl)
+      next unless digest == 'f25df829a02c9b3fc3cba4d4651c9d5c045bd7dbb1958fba91bb79a31ac83c7f'
+      lines.slice!(idx..29)
     end
 
     filtered_path = File.join(@evidence_path, "filtered-commands.txt")
