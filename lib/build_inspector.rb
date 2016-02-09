@@ -26,6 +26,7 @@ class BuildInspector
   end
 
   def inspect
+    reset_network
     clone_repo
     snapshot_filesystem
     start_monitoring
@@ -40,6 +41,12 @@ class BuildInspector
     @whisperer.run(message: "Cloning #{@repo_url}:#{@repo_branch} ...") do |commands|
       commands << "git clone --recursive --depth=50 --branch=#{@repo_branch} #{@repo_url} #{REPO_PATH}"
     end
+  end
+
+  def reset_network
+    # If the host machine's IP address changes, this can confuse Vagrant
+    # Resetting the network allows Vagrant to update network info
+    @whisperer.run(stream: true) { |c| c << 'sudo ifdown eth0 && sudo ifup eth0' }
   end
 
   def snapshot_filesystem

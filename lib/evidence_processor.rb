@@ -26,6 +26,8 @@ class EvidenceProcessor
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cat\]: cat /home/vagrant/\.rvm/(RELEASE|VERSION)\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/grep\]: grep DISTRIB_ID=Ubuntu /etc/lsb-release\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/grep\]: #{Regexp.escape('grep ^\s*rvm .*$ /home/vagrant/.rvmrc')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/grep\]: #{Regexp.escape('grep ^#ruby= /home/vagrant/repo/Gemfile')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/grep\]: #{Regexp.escape('grep -E ^\s*ruby /home/vagrant/repo/Gemfile')}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/ps\]: ps -p \d+ -o ucomm=\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_arch=# { s#^system_arch=##;; p; } -e /^$/d')}\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_name=# { s#^system_name=##;; p; } -e /^$/d')}\n\z~,
