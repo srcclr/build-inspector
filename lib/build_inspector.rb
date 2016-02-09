@@ -64,7 +64,7 @@ class BuildInspector
     @whisperer.run(message: 'Preparing network and process monitoring ...') do |commands|
       commands << "sudo tcpdump -w #{EVIDENCE_PATH}/traffic.pcap -i eth0 > /dev/null 2>&1 &disown"
       commands << "ps --sort=lstart -eott,cmd > #{EVIDENCE_PATH}/#{PROCESSES_BEFORE_FILE}"
-      commands << "truncate -s 0 /var/log/snoopy.log"
+      commands << "sleep 0.1 && truncate -s 0 /var/log/snoopy.log"
     end
   end
 

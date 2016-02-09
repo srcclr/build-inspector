@@ -23,6 +23,29 @@ class EvidenceProcessor
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/diff\]: diff -u /backup/home/vagrant/\.bashrc /home/vagrant/\.bashrc\n\z~,
     %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/sudo\]: sudo cp /var/log/snoopy\.log /evidence\n\z~,
     %r~\A\[uid:0 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cp\]: cp /var/log/snoopy\.log /evidence\n\z~,
+
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/cat\]: cat /home/vagrant/\.rvm/(RELEASE|VERSION)\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/grep\]: grep DISTRIB_ID=Ubuntu /etc/lsb-release\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/grep\]: #{Regexp.escape('grep ^\s*rvm .*$ /home/vagrant/.rvmrc')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/ps\]: ps -p \d+ -o ucomm=\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_arch=# { s#^system_arch=##;; p; } -e /^$/d')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_name=# { s#^system_name=##;; p; } -e /^$/d')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_name_lowercase=# { s#^system_name_lowercase=##;; p; } -e /^$/d')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_type=# { s#^system_type=##;; p; } -e /^$/d')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/bin/sed\]: #{Regexp.escape('sed -n -e \#^system_version=# { s#^system_version=##;; p; } -e /^$/d')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/bin/uname\]: uname(?: -(?:a|m))?\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/home/vagrant/\.rvm/rubies/ruby-[\d\.]+/bin/ruby\]: #{Regexp.escape("ruby -e " + BuildInspector::DIFF_RUBY).tr("'", '')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/awk\]: #{Regexp.escape('awk -F= $1=="DISTRIB_RELEASE"{print $2} /etc/lsb-release')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/dirname\]: dirname /home/vagrant/\.rvm\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/dpkg\]: dpkg --print-architecture\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/head\]: head -n 1\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/locale\]: locale\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant filename:/usr/bin/tr\]: #{Regexp.escape('tr [A-Z] [a-z]')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant(?:/repo)? filename:/usr/bin/which\]: which (sudo|whence|which|java)\n\z~,
+
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/find\]: #{Regexp.escape('find -L /home/vagrant/.rvm/hooks -iname after_cd* -type f')}\n\z~,
+    %r~\A\[uid:1000 sid:\d+ tty:\(none\) cwd:/home/vagrant/repo filename:/usr/bin/basename\]: basename /usr/bin/gradle\n\z~,
+
   ]
 
   def initialize(evidence_path:, vagrant_ip:, host_whitelist:)
