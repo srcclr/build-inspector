@@ -16,7 +16,6 @@ evidence_files:
     - /evidence
     - /home/vagrant/.npm
     - /home/vagrant/repo
-    - /home/vagrant/tmp_runCommands.sh
     - /lost+found
     - /media
     - /mnt

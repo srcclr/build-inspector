@@ -72,16 +72,17 @@ class EvidenceProcessor
       lines -= lines.grep(filter)
     end
 
+    # The particular version of gradle we use calls a perl script when using submodules
     perl_lines = lines.select { |l| l.include?('filename:/usr/bin/perl]: /usr/bin/perl -e') }
     require 'digest'
     sha256 = Digest::SHA256.new
     perl_lines.each do |pl|
       idx = lines.find_index(pl)
       next unless idx
-      perl = lines[idx..29] * ''
+      perl = lines[idx + 1, 28] * ''
       digest = sha256.hexdigest(perl)
-      next unless digest == 'f25df829a02c9b3fc3cba4d4651c9d5c045bd7dbb1958fba91bb79a31ac83c7f'
-      lines.slice!(idx..29)
+      next unless digest == 'ac8bf43d69665fecf43f2bcd0db25dc0543dd198645820c6488eeb48ea394631'
+      lines.slice!(idx, 29)
     end
 
     filtered_path = File.join(@evidence_path, "filtered-commands.txt")

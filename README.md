@@ -12,7 +12,7 @@ compromising the developer's machine.
 Once you have both Ruby and Vagrant installed, go ahead and install
 the Sahara plugin, bundler and this project's dependencies.
 
-```
+```bash
 vagrant plugin install sahara
 git clone https://github.com/srcclr/build-inspector.git
 gem install bundler
@@ -25,7 +25,7 @@ First, make sure that you have the
 [requirements](https://github.com/srcclr/build-inspector#requirements)
 and you are inside the repository's directory.
 
-```
+```bash
 cd build_inspector
 ```
 
@@ -34,10 +34,12 @@ do it yourself. This step will take a while the first time, but won't
 be necessary again. Eventually, this step will be eliminated. Start
 Vagrant and build the image:
 
-``` vagrant up ```
+```bash
+vagrant up
+```
 
 Once vagrant is started, save a snapshot with:
-```
+```bash
 vagrant sandbox on
 ```
 
@@ -46,12 +48,15 @@ vagrant sandbox on
 ```
 Usage inspector [options] <git repo URL>
     -h, --help                       Display this screen
-    -n, --no-rollback                Don't rollback the virtual machine's state after running
+    -n, --no-rollback                Do not roll back the virtual machine state after running
+    -c, --config <PATH>              Use configuration file at <PATH>, default=config.yml
+    -p, --process <PATH>             Only process evidence at <PATH>
+    -b, --branch <BRANCH>            Clone <BRANCH> from repository URL
 ```
 
 ### Gradle Example
 
-```
+```bash
 cp configs/gradle_template.yml config.yml
 ./inspector https://github.com/jsyeo/TotallyLegitApp
 ```
@@ -79,7 +84,7 @@ network and process activity, file system changes, and any new processes.
 
 ### Bundler Example
 
-```
+```bash
 cp configs/bundler_template.yml config.yml
 ./inspector https://github.com/jsyeo/harmless-project
 ```
@@ -91,13 +96,13 @@ Run it with the Build Inspector and you should see a list of domains
 that the machine tried to connect to.
 
 ```
-The following hostnames were reached during the build process:
-  www.google.com (74.125.200.99)                                     543B
+Hosts contacted:
+  www.google.com (74.125.224.113)                                    1.3K
 ```
 
 ### NPM Example
 
-```
+```bash
 cp configs/npm_template.yml config.yml
 ./inspector https://github.com/jsyeo/ann-pee-am
 ```
@@ -120,7 +125,7 @@ hosts or exclude directories from the monitoring, create and add an
 `config.yml` in the repository. The `config.yml' file is simply
 a YAML file that looks like this:
 
-```
+```yaml
 ---
 
 commands: bundle install --jobs 2

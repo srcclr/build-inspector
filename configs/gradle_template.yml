@@ -18,7 +18,6 @@ evidence_files:
     - /evidence
     - /home/vagrant/.gradle
     - /home/vagrant/repo
-    - /home/vagrant/tmp_runCommands.sh
     - /lost+found
     - /media
     - /mnt

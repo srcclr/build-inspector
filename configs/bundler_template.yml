@@ -16,8 +16,8 @@ evidence_files:
     - /dev
     - /evidence
     - /home/vagrant/.gem
+    - /home/vagrant/.rvm
     - /home/vagrant/repo
-    - /home/vagrant/tmp_runCommands.sh
     - /lost+found
     - /media
     - /mnt
