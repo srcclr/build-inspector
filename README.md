@@ -122,7 +122,7 @@ persistent backdoor using `netcat`.
 
 The tool monitors all network and file system activities. To ignore
 hosts or exclude directories from the monitoring, create and add an
-`config.yml` in the repository. The `config.yml' file is simply
+`config.yml` in the repository. The `config.yml` file is simply
 a YAML file that looks like this:
 
 ```yaml
@@ -158,3 +158,11 @@ Then, make all the changes you want to the image. If you'd like to save the chan
 
 Otherwise, you can wipe out the changes with:
 `vagrant sandbox rollback`
+
+There are also a number of Rake tasks:
+```
+vagrant:commit    -- commits the machine's state
+vagrant:rebuild   -- equivalent to a `vagrant destroy && vagrant up`
+vagrant:reload    -- equivalent to a `vagrant halt && vagrant up`
+vagrant:rollback  -- restores the previously committed machine state
+```
