@@ -53,7 +53,7 @@ Usage inspector [options] <git repo URL>
 
 ```
 cp configs/gradle_template.yml config.yml
-./inspector https://github.com/jsyeo/TotallyLegitApp.git
+./inspector https://github.com/jsyeo/TotallyLegitApp
 ```
 
 The above project has a task called `backdoor` that adds a reverse
@@ -81,7 +81,7 @@ network and process activity, file system changes, and any new processes.
 
 ```
 cp configs/bundler_template.yml config.yml
-./inspector https://github.com/jsyeo/harmless-project.git
+./inspector https://github.com/jsyeo/harmless-project
 ```
 
 This bundler project has a gem that pings Google during its
