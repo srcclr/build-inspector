@@ -23,6 +23,7 @@ Vagrant.configure(2) do |config|
   config.vm.provider 'virtualbox' do |vb|
     vb.customize ['modifyvm', :id, '--natdnsproxy1', 'off']
     vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'off']
+    vb.memory = 1024
   end
 
   config.vm.provider :digital_ocean do |provider, override|
