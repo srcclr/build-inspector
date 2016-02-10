@@ -153,19 +153,19 @@ to the root of this project or you may write one from scratch.
 ### Gradle Build Fails with java.lang.OutOfMemoryError
 A build may work on the host machine but fail with BuildInspector because the Vagrant virtual machine has less memory available than the host machine. There are two ways to work around this issue.
 
-*Option 1:* Modify [Vagrantfile](Vagrantfile)
+#### Option 1: Modify [Vagrantfile](Vagrantfile)
 This is the most direct option. This file is used to setup some properties of the virtual machine. The relevant section is:
 ```ruby
-  config.vm.provider 'virtualbox' do |vb|
-    vb.customize ['modifyvm', :id, '--natdnsproxy1', 'off']
-    vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'off']
-    vb.memory = 1024
-  end
+config.vm.provider 'virtualbox' do |vb|
+  vb.customize ['modifyvm', :id, '--natdnsproxy1', 'off']
+  vb.customize ['modifyvm', :id, '--natdnshostresolver1', 'off']
+  vb.memory = 1024
+end
 ```
 
 Simply adjust `vb.memory = 1024` to some other number such as `vb.memory = 2000` then rebuild the machine with `rake vagrant:rebuild`. The Java VM determines heap space as a portion of total memory available. Increasing the memory will also increase the heap space.
 
-*Option 2:* Adjust Java VM Heap S
+#### Option 2: Adjust Java VM Heap Size
 If you're unable to adjust the memory requirements for the Vagrant virtual machine, you can try to tell Gradle to tell the Java VM to allocate more heap space. This can be done by adding the following command to your configuration:
 
 ```bash
