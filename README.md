@@ -202,8 +202,12 @@ Otherwise, you can wipe out the changes with:
 
 There are also a number of Rake tasks:
 ```
-vagrant:commit    -- commits the machine's state
-vagrant:rebuild   -- equivalent to a `vagrant destroy && vagrant up`
-vagrant:reload    -- equivalent to a `vagrant halt && vagrant up`
-vagrant:rollback  -- restores the previously committed machine state
+rake vagrant:commit    # Commits the machine's state
+rake vagrant:destroy   # Destroy Vagrant image
+rake vagrant:halt      # Gracefully stop Vagrant
+rake vagrant:rebuild   # Equivalent to a `vagrant destroy && vagrant up`
+rake vagrant:reload    # Equivalent to a `vagrant halt && vagrant up`
+rake vagrant:rollback  # Restores the previously committed machine state
+rake vagrant:up        # Start Vagrant
+rake vagrant:update    # Upgrade Vagrant image
 ```
