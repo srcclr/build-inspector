@@ -5,7 +5,6 @@ class VagrantWhisperer
   TMP_CMDS = "#{TMP_PATH}/vagrantCommands.sh"
 
   def initialize(verbose: false)
-    # TODO: wire up verbose
     @verbose = verbose
     @ssh_opts = parse_ssh_config(`vagrant ssh-config`)
   end
@@ -61,6 +60,7 @@ class VagrantWhisperer
 
   def ssh_exec(command, stream: false)
     full_cmd = "ssh #{ssh_args} \"#{command}\""
+    puts full_cmd if @verbose
     if stream
       $stdout.sync = true
       IO.popen(full_cmd).read
@@ -74,7 +74,7 @@ class VagrantWhisperer
   end
 
   def ssh_opts_str
-    @ssh_opts.map { |k,v| "-o #{k}=#{v}"}.join(' ')
+    @ssh_opts.map { |k, v| "-o #{k}=#{v}" } * ' '
   end
 
   def parse_ssh_config(config)
