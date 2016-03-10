@@ -71,8 +71,9 @@ repo_url = ARGV.first
 inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url, repo_branch: options[:branch],
                                commands: config.commands, evidence_files: config.evidence_files)
 
-whisperer.snapshot
+start_time = Time.now
 
+whisperer.snapshot
 inspector.inspect
 
 repo_url = ARGV.first
@@ -81,7 +82,9 @@ evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
 collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
 puts Printer.yellowify('Collecting evidence ...')
 collector.collect
-
 whisperer.rollback if options[:rollback]
 
 process_evidence(evidence_name, whisperer.ip_address, config.host_whitelist)
+
+total_time = Time.now - start_time
+puts Printer.yellowify("Finished inspecting build after #{total_time} seconds")
