@@ -46,19 +46,24 @@ vagrant sandbox on
 ### Usage
 
 ```
-Usage inspector [options] <git repo URL>
+Usage inspector [options] <git repo path>
     -h, --help                       Display this screen
     -n, --no-rollback                Do not roll back the virtual machine state after running
+    -v, --verbose                    Be verbose
     -c, --config <PATH>              Use configuration file at <PATH>, default=config.yml
     -p, --process <PATH>             Only process evidence at <PATH>
     -b, --branch <BRANCH>            Clone <BRANCH> from repository URL
+        --url                        Git repo path is a URL
+        --gem                        Perform a GEM based build
+        --gradle                     Perform a Gradle based build
+        --maven                      Perform a Maven based build
+        --npm                        Perform a NPM based build
 ```
 
 ### Gradle Example
 
 ```bash
-cp configs/gradle_template.yml config.yml
-./inspector https://github.com/jsyeo/TotallyLegitApp
+./inspector --gradle test-repos/TotallyLegitApp
 ```
 
 The above project has a task called `backdoor` that adds a reverse
@@ -85,8 +90,7 @@ network and process activity, file system changes, and any new processes.
 ### Bundler Example
 
 ```bash
-cp configs/bundler_template.yml config.yml
-./inspector https://github.com/jsyeo/harmless-project
+./inspector --gem test-repos/harmless-project
 ```
 
 This bundler project has a gem that pings Google during its
@@ -103,8 +107,7 @@ Hosts contacted:
 ### NPM Example
 
 ```bash
-cp configs/npm_template.yml config.yml
-./inspector https://github.com/jsyeo/ann-pee-am
+./inspector --npm test-repos/ann-pee-am
 ```
 
 Inspecting this NPM project should yield the following output:
@@ -172,7 +175,7 @@ If you're unable to adjust the memory requirements for the Vagrant virtual machi
 echo org.gradle.jvmargs=-Xmx2G >> gradle.properties
 ```
 
-For example, `gradle_template.yml` is:
+For example, `gradle.yml` is:
 
 ```yaml
 commands: gradle build

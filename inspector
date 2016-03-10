@@ -16,7 +16,6 @@ options = {
   branch: 'master',
   only_process: nil,
   is_url: false,
-  build_type: nil,
   verbose: false,
 }
 
@@ -56,19 +55,19 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--gem', String, "Perform a GEM based build") do |type|
-    build_type = :gem
+    options[:config] = 'configs/bundler.yml'
   end
 
   opts.on('--gradle', String, "Perform a Gradle based build") do |type|
-    build_type = :gradle
+    options[:config] = 'configs/gradle.yml'
   end
 
   opts.on('--maven', String, "Perform a Maven based build") do |type|
-    build_type = :maven
+    options[:config] = 'configs/maven.yml'
   end
 
   opts.on('--npm', String, "Perform a NPM based build") do |type|
-    build_type = :npm
+    options[:config] = 'configs/npm.yml'
   end
 end
 optparse.parse!
@@ -85,18 +84,29 @@ config = Configuration.new(options[:config])
 if options[:only_process]
   evidence_path = options[:only_process]
   process_evidence(evidence_path, whisperer.ip_address, config.host_whitelist)
-  exit(0)
+  exit 0
 end
 
 if ARGV.size < 1
   puts 'Must specifiy a repository URL'
   puts optparse.help
-  exit(-1)
+  exit -1
 end
 
 start_time = Time.now
 
 repo_path = ARGV.first
+repo_name = nil
+if options[:is_url]
+  repo_name = repo_path.split('/').last.chomp('.git')
+else
+  repo_name = File.basename(repo_path)
+  unless File.exists?(repo_path)
+    puts "The repo path #{repo_path} does not exist. Did you mean to use --url ?"
+    exit -1
+  end
+end
+
 inspector = BuildInspector.new(
   whisperer: whisperer, repo_path: repo_path,
   is_url: options[:is_url], repo_branch: options[:branch],
@@ -106,12 +116,6 @@ inspector = BuildInspector.new(
 whisperer.snapshot
 inspector.inspect
 
-repo_name = nil
-if options[:is_url]
-  repo_name = repo_path.split('/').last.chomp('.git')
-else
-  repo_name = File.basename(repo_path)
-end
 evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
 collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
 puts Printer.yellowify('Collecting evidence ...')

