@@ -15,10 +15,13 @@ options = {
   config: 'config.yml',
   branch: 'master',
   only_process: nil,
+  is_url: false,
+  build_type: nil,
+  verbose: false,
 }
 
 optparse = OptionParser.new do |opts|
-  opts.banner = "Usage #{File.basename($0)} [options] <git repo URL>"
+  opts.banner = "Usage #{File.basename($0)} [options] <git repo path>"
   opts.on('-h', '--help', 'Display this screen') do
     puts opts
     exit
@@ -27,6 +30,10 @@ optparse = OptionParser.new do |opts|
   opts.on('-n', '--no-rollback',
           'Do not roll back the virtual machine state after running') do
     options[:rollback] = false
+  end
+
+  opts.on('-v', '--verbose', 'Be verbose') do
+    options[:verbose] = true
   end
 
   opts.on('-c', '--config <PATH>', String,
@@ -43,6 +50,26 @@ optparse = OptionParser.new do |opts|
           "Clone <BRANCH> from repository URL") do |branch|
     options[:branch] = branch
   end
+
+  opts.on('--url', String, "Git repo path is a URL") do
+    options[:is_url] = true
+  end
+
+  opts.on('--gem', String, "Perform a GEM based build") do |type|
+    build_type = :gem
+  end
+
+  opts.on('--gradle', String, "Perform a Gradle based build") do |type|
+    build_type = :gradle
+  end
+
+  opts.on('--maven', String, "Perform a Maven based build") do |type|
+    build_type = :maven
+  end
+
+  opts.on('--npm', String, "Perform a NPM based build") do |type|
+    build_type = :npm
+  end
 end
 optparse.parse!
 
@@ -52,7 +79,7 @@ def process_evidence(evidence_path, ip_address, host_whitelist)
   processor.process
 end
 
-whisperer = VagrantWhisperer.new
+whisperer = VagrantWhisperer.new(verbose: options[:verbose])
 config = Configuration.new(options[:config])
 
 if options[:only_process]
@@ -67,17 +94,24 @@ if ARGV.size < 1
   exit(-1)
 end
 
-repo_url = ARGV.first
-inspector = BuildInspector.new(whisperer: whisperer, repo_url: repo_url, repo_branch: options[:branch],
-                               commands: config.commands, evidence_files: config.evidence_files)
-
 start_time = Time.now
+
+repo_path = ARGV.first
+inspector = BuildInspector.new(
+  whisperer: whisperer, repo_path: repo_path,
+  is_url: options[:is_url], repo_branch: options[:branch],
+  commands: config.commands, evidence_files: config.evidence_files
+)
 
 whisperer.snapshot
 inspector.inspect
 
-repo_url = ARGV.first
-repo_name = repo_url.split('/').last.chomp('.git')
+repo_name = nil
+if options[:is_url]
+  repo_name = repo_path.split('/').last.chomp('.git')
+else
+  repo_name = File.basename(repo_path)
+end
 evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
 collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
 puts Printer.yellowify('Collecting evidence ...')

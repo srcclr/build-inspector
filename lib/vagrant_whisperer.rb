@@ -38,12 +38,16 @@ class VagrantWhisperer
   end
 
   def send_file(local_path, remote_path)
-    cmd = "scp #{ssh_opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
+    scp_cmd = File.directory?(local_path) ? 'scp -r' : 'scp'
+    cmd = "#{scp_cmd} #{ssh_opts_str} #{local_path} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path}"
+    puts "#{cmd}" if @verbose
     `#{cmd}`
   end
 
   def get_file(remote_path, local_path = '.')
-    cmd = "scp #{ssh_opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path} #{local_path}"
+    scp_cmd = File.directory?(local_path) ? 'scp -r' : 'scp'
+    cmd = "#{scp_cmd} #{ssh_opts_str} #{@ssh_opts['User']}@#{@ssh_opts['HostName']}:#{remote_path} #{local_path}"
+    puts "#{cmd}" if @verbose
     `#{cmd}`
   end
 

@@ -4,7 +4,7 @@ require_relative 'vagrant_whisperer'
 class BuildInspector
   EVIDENCE_PATH = '/evidence'
   BACKUP_PATH = '/backup'
-  REPO_PATH = '$HOME/repo'
+  REPO_PATH = '/home/vagrant/repo'
   RDIFF_TARGET = '/'
 
   PCAP_FILE = 'traffic.pcap'
@@ -16,9 +16,10 @@ class BuildInspector
   PROCESSES_AFTER_FILE = 'ps-after.txt'
   PROCESSES_FILE = 'snoopy.log'
 
-  def initialize(whisperer:, repo_url:, repo_branch: 'master', commands:, evidence_files: '', verbose: false)
+  def initialize(whisperer:, repo_path:, is_url:, repo_branch: 'master', commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer
-    @repo_url = repo_url
+    @repo_path = repo_path
+    @is_url = is_url
     @repo_branch = repo_branch
     @commands = Array(commands)
     @evidence_files = evidence_files
@@ -38,8 +39,16 @@ class BuildInspector
   private
 
   def clone_repo
-    @whisperer.run(message: "Cloning #{@repo_url}:#{@repo_branch} ...") do |commands|
-      commands << "git clone --recursive --depth=50 --branch=#{@repo_branch} #{@repo_url} #{REPO_PATH}"
+    if @is_url
+      @whisperer.run(message: "Cloning #{@repo_path}:#{@repo_branch} ...") do |commands|
+        commands << "git clone --recursive --depth=50 --branch=#{@repo_branch} #{@repo_path} #{REPO_PATH}"
+      end
+    else
+      @whisperer.run(message: "Copying #{@repo_path} to inspector ...") do |commands|
+        @whisperer.send_file(@repo_path, REPO_PATH)
+        commands << "cd #{REPO_PATH}"
+        commands << "git checkout #{@repo_branch}"
+      end
     end
   end
 

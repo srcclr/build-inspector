@@ -6,7 +6,7 @@ module Printer
   def self.exec_puts(command)
     Open3.popen3(command) do |stdin, stdout, stderr, thread|
       # read each stream from a new thread
-      { :out => stdout, :err => stderr }.each do |type, stream|
+      { out: stdout, err: stderr }.each do |type, stream|
         Thread.new do
           until (line = stream.gets).nil? do
             case type
