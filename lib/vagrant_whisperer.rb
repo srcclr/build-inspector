@@ -28,8 +28,12 @@ class VagrantWhisperer
     ssh_exec("bash -l #{TMP_CMDS}", stream: stream)
   end
 
+  def up
+    Printer.exec_puts 'vagrant up'
+  end
+
   def snapshot
-    `vagrant sandbox on`
+    Printer.exec_puts 'vagrant sandbox on'
   end
 
   def rollback

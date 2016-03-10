@@ -4,8 +4,9 @@
 Vagrant.configure(2) do |config|
   config.vm.box = "ubuntu/trusty64"
 
-  config.vm.network "forwarded_port", guest: 8080, host: 8080
+  config.vm.box_check_update = false
 
+  # Provisioning
   PROVISIONING_DIR = 'provisioning'
   sources = 'sources.list'
   sshd = 'sshd'
@@ -14,8 +15,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap.sh'), keep_color: true
   config.vm.provision :shell, privileged: false, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap2.sh')
   config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap3.sh')
-
-  config.vm.provision :shell, :path => File.join(PROVISIONING_DIR, 'bootstrap.sh')
+  config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'bootstrap.sh')
 
   # Security!
   config.vm.synced_folder ".", "/vagrant", disabled: true

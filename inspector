@@ -95,6 +95,8 @@ end
 
 start_time = Time.now
 
+whisperer.up
+
 repo_path = ARGV.first
 repo_name = nil
 if options[:is_url]
@@ -112,6 +114,7 @@ inspector = BuildInspector.new(
   is_url: options[:is_url], repo_branch: options[:branch],
   commands: config.commands, evidence_files: config.evidence_files
 )
+
 
 whisperer.snapshot
 inspector.inspect
