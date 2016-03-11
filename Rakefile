@@ -40,4 +40,35 @@ namespace :vagrant do
   task :reload do
     Printer.exec_puts('vagrant reload')
   end
+
+  desc 'Check environment to determine if build-inspector should work'
+  task :test do
+    vagrant_path = `which vagrant`
+    if vagrant_path == '' || vagrant_path == 'vagrant not found'
+      puts "Vagrant installed:\t\tNO"
+      return
+    else
+      puts "Vagrant installed:\t\tyes - path=#{vagrant_path}"
+    end
+
+    plugin_str = `vagrant plugin list`
+    indx = plugin_str.index('sahara (')
+    if indx
+      start_offset = indx + 'sahara ('.length
+      end_offset = plugin_str.index(')', start_offset) - 1
+      sandbox_version = plugin_str[start_offset..end_offset]
+      puts "Sandbox plugin installed:\tyes - version=#{sandbox_version}"
+    else
+      puts "Sandbox plugin installed:\tNO"
+    end
+
+    status_str = `vagrant status`
+    status_line = status_str.split("\n").select { |e| e.start_with?('default') }.first
+    status = status_line.split(/\s+/)[1]
+    if status == 'not created'
+      puts "Box provisioned:\t\tNO"
+    else
+      puts "Box provisioned:\t\tyes - status=#{status}"
+    end
+  end
 end

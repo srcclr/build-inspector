@@ -151,7 +151,9 @@ There are examples for different build systems in the [configs](configs)
 directory. You may copy the approriate configs for your build system
 to the root of this project or you may write one from scratch.
 
-## Known Issues
+## Troubleshooting
+
+If you're having a problem, try running `rake vagrant:test` and ensure your environment is setup correctly.
 
 ### Gradle Build Fails with java.lang.OutOfMemoryError
 A build may work on the host machine but fail with BuildInspector because the Vagrant virtual machine has less memory available than the host machine. There are two ways to work around this issue.
@@ -208,6 +210,7 @@ rake vagrant:halt      # Gracefully stop Vagrant
 rake vagrant:rebuild   # Equivalent to a `vagrant destroy && vagrant up`
 rake vagrant:reload    # Equivalent to a `vagrant halt && vagrant up`
 rake vagrant:rollback  # Restores the previously committed machine state
+rake vagrant:test      # Check environment to determine if build-inspector should work
 rake vagrant:up        # Start Vagrant
 rake vagrant:update    # Upgrade Vagrant image
 ```
