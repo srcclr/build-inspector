@@ -156,7 +156,7 @@ to the root of this project or you may write one from scratch.
 Help us understand what threats are out there in the wild by submitting any suspicious builds you encounter. This helps us direct engineering efforts to better protect against emerging threats and also just makes us feel like we're helping.
 
 To submit a suspicious build, just click this link to create a new issue:
-[https://github.com/srcclr/build-inspector/issues/new?title=Suspicious%20Build%20Evidence&body=Where%20did%20you%20find%20this%20project%3F%0A%0AWhy%20do%20you%20think%20it%27s%20suspicious%3F%0A%0AAny%20other%20important%20details%3F%0A%0AHow%20are%20you%20doing%20today%3F](Suspicious Build Issue Submission).
+[Suspicious Build Issue Submission](https://github.com/srcclr/build-inspector/issues/new?title=Suspicious%20Build%20Evidence&body=Where%20did%20you%20find%20this%20project%3F%0A%0AWhy%20do%20you%20think%20it%27s%20suspicious%3F%0A%0AAny%20other%20important%20details%3F%0A%0AHow%20are%20you%20doing%20today%3F).
 
 Then, simply upload the evidence zip to the GitHub issue you just created. Thanks in advance!
 
