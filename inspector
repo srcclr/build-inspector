@@ -23,6 +23,7 @@ require_relative 'lib/evidence_collector'
 require_relative 'lib/evidence_processor'
 require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
+require_relative 'lib/report_builder'
 
 # Don't buffer output; flush it immediately.
 $stdout.sync = true
@@ -89,12 +90,6 @@ optparse = OptionParser.new do |opts|
 end
 optparse.parse!
 
-def process_evidence(evidence_path, ip_address, host_whitelist)
-  processor = EvidenceProcessor.new(evidence_path: evidence_path, vagrant_ip: ip_address,
-                                    host_whitelist: host_whitelist)
-  processor.process
-end
-
 whisperer = VagrantWhisperer.new(verbose: options[:verbose])
 config = Configuration.new(options[:config])
 
@@ -111,9 +106,10 @@ if ARGV.size < 1
 end
 
 puts "****************************** [:] ******************************"
-puts "           Build Inspector - SRC:CLR - https://srcclr.com/"
-puts "                     Build software, safely."
+puts "*           Build Inspector - SRC:CLR - https://srcclr.com/     *"
+puts "*                     Build software, safely.                   *"
 puts "****************************** [:] ******************************"
+puts "\n"
 
 start_time = Time.now
 
@@ -146,7 +142,13 @@ puts Printer.yellowify('Collecting evidence ...')
 collector.collect
 whisperer.rollback if options[:rollback]
 
-process_evidence(evidence_name, whisperer.ip_address, config.host_whitelist)
+processor = EvidenceProcessor.new(evidence_path: evidence_name,
+                                  vagrant_ip: whisperer.ip_address,
+                                  host_whitelist: config.host_whitelist)
+processor.process
 
-total_time = Time.now - start_time
+end_time = Time.now
+total_time = end_time - start_time
 puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds")
+
+ReportBuilder.build("#{evidence_name}/build-report.html", repo_path, repo_name, options, config, processor, start_time, end_time)

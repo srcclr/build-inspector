@@ -17,6 +17,8 @@ limitations under the License.
 require 'yaml'
 
 class Configuration
+  attr_reader :config
+
   def initialize(config = 'config.yml')
     @config = YAML.load_file(config) if File.exist?(config)
     @config ||= {}
