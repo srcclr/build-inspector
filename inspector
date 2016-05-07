@@ -107,7 +107,7 @@ end
 
 puts "****************************** [:] ******************************"
 puts "*           Build Inspector - SRC:CLR - https://srcclr.com/     *"
-puts "*                     Build software, safely.                   *"
+puts "*              Security for open-source code. #devsec           *"
 puts "****************************** [:] ******************************"
 puts "\n"
 
