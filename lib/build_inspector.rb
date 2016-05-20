@@ -18,19 +18,19 @@ require_relative 'printer'
 require_relative 'vagrant_whisperer'
 
 class BuildInspector
-  EVIDENCE_PATH = '/evidence'
-  BACKUP_PATH = '/backup'
-  REPO_PATH = '/home/vagrant/repo'
-  RDIFF_TARGET = '/'
+  EVIDENCE_PATH = '/evidence'.freeze
+  BACKUP_PATH = '/backup'.freeze
+  REPO_PATH = '/home/vagrant/repo'.freeze
+  RDIFF_TARGET = '/'.freeze
 
-  PCAP_FILE = 'traffic.pcap'
-  FILESYSTEM_DIFF_FILE = 'filesystem-diff.txt'
-  FILESYSTEM_CHANGES_FILE ='filesystem-changes.txt'
-  DIFF_RUBY = %Q~IO.readlines("#{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f}` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}~
-  FILESYSTEM_DIFF_CMD = "ruby -e '#{DIFF_RUBY}' > #{EVIDENCE_PATH}/#{FILESYSTEM_CHANGES_FILE}"
-  PROCESSES_BEFORE_FILE = 'ps-before.txt'
-  PROCESSES_AFTER_FILE = 'ps-after.txt'
-  PROCESSES_FILE = 'snoopy.log'
+  PCAP_FILE = 'traffic.pcap'.freeze
+  FILESYSTEM_DIFF_FILE = 'filesystem-diff.txt'.freeze
+  FILESYSTEM_CHANGES_FILE ='filesystem-changes.txt'.freeze
+  DIFF_RUBY = %Q~IO.readlines("#{EVIDENCE_PATH}/#{FILESYSTEM_DIFF_FILE}").each { |e| puts e; o,f = e.strip.split(": "); puts `diff -u #{BACKUP_PATH}/\#{f} /\#{f}` if o.eql?("changed") && File.exists?("/"+f) && !File.directory?("/"+f)}~.freeze
+  FILESYSTEM_DIFF_CMD = "ruby -e '#{DIFF_RUBY}' > #{EVIDENCE_PATH}/#{FILESYSTEM_CHANGES_FILE}".freeze
+  PROCESSES_BEFORE_FILE = 'ps-before.txt'.freeze
+  PROCESSES_AFTER_FILE = 'ps-after.txt'.freeze
+  PROCESSES_FILE = 'snoopy.log'.freeze
 
   def initialize(whisperer:, repo_path:, is_url:, repo_branch: , commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer

@@ -34,8 +34,6 @@ class Configuration
   # Returns evidence_files configuration as a string in
   # rdiff-backup's --include-filelist format
   def evidence_files
-    @excluded.map { |x| "- #{x}" }
-             .concat(@included)
-             .join("\n")
+    @excluded.map { |x| "- #{x}" }.concat(@included) * "\n"
   end
 end

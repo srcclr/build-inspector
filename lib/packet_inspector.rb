@@ -23,7 +23,7 @@ class PacketInspector
   DNS_PORT = 53
 
   def initialize(pcap_file)
-    @packets = PcapFile.read_packets pcap_file
+    @packets = PcapFile.read_packets(pcap_file)
   end
 
   def packets_from(src_ip)

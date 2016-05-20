@@ -17,8 +17,8 @@ limitations under the License.
 require_relative 'printer'
 
 class VagrantWhisperer
-  TMP_PATH = '/tmp'
-  TMP_CMDS = "#{TMP_PATH}/vagrantCommands.sh"
+  TMP_PATH = '/tmp'.freeze
+  TMP_CMDS = "#{TMP_PATH}/vagrantCommands.sh".freeze
 
   def initialize(verbose: false)
     @verbose = verbose
