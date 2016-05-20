@@ -105,10 +105,10 @@ if ARGV.size < 1
   exit -1
 end
 
-puts "****************************** [:] ******************************"
-puts "*           Build Inspector - SRC:CLR - https://srcclr.com/     *"
-puts "*              Security for open-source code. #devsec           *"
-puts "****************************** [:] ******************************"
+puts '****************************** [:] ******************************'
+puts '*          Build Inspector - SRC:CLR - https://srcclr.com/      *'
+puts '*              Security for open-source code. #devsec           *'
+puts '****************************** [:] ******************************'
 puts "\n"
 
 start_time = Time.now
