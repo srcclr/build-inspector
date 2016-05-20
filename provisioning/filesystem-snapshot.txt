@@ -1,0 +1,18 @@
+- /backup
+- /dev
+- /evidence
+- /home/vagrant/.gradle
+- /home/vagrant/repo
+- /lost+found
+- /media
+- /mnt
+- /proc
+- /run
+- /sys
+- /tmp
+- /vagrant
+- /var/lock
+- /var/log
+- /var/run
+- /var/tmp
+/

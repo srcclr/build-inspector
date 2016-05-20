@@ -18,7 +18,7 @@ service chef-client stop
 echo "Adding APT repositories"
 add-apt-repository -y ppa:chris-lea/node.js
 
-# For gradle 2.x
+# For Gradle 2.x
 add-apt-repository ppa:cwchien/gradle
 
 # For openjdk-8-jdk

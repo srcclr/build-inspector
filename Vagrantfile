@@ -2,7 +2,7 @@
 # vi: set ft=ruby :
 
 Vagrant.configure(2) do |config|
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = 'ubuntu/trusty64'
 
   config.vm.box_check_update = false
 
@@ -10,15 +10,17 @@ Vagrant.configure(2) do |config|
   PROVISIONING_DIR = 'provisioning'
   sources = 'sources.list'
   sshd = 'sshd'
+  snapshot_files = 'filesystem-snapshot.txt'
   config.vm.provision :file, source: File.join(PROVISIONING_DIR, sources), destination: sources
   config.vm.provision :file, source: File.join(PROVISIONING_DIR, sshd), destination: sshd
+  config.vm.provision :file, source: File.join(PROVISIONING_DIR, snapshot_files), destination: snapshot_files
   config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap.sh'), keep_color: true
   config.vm.provision :shell, privileged: false, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap2.sh')
   config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'pre-package-bootstrap3.sh')
   config.vm.provision :shell, path: File.join(PROVISIONING_DIR, 'bootstrap.sh')
 
   # Security!
-  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.synced_folder '.', '/vagrant', disabled: true
 
   config.vm.provider 'virtualbox' do |vb|
     vb.customize ['modifyvm', :id, '--natdnsproxy1', 'off']
