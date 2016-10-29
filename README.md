@@ -1,8 +1,7 @@
 # Build Inspector
 
 [Build Inspector](https://github.com/srcclr/build-inspector) is a forensic sandbox for buliding source code and gives insight into what's happening during the build of a project. It's language and build system agnostic and is capable of inspecting network activities, file system changes, and running
-processes. All build operations happen in a sandboxed environment without
-compromising the developer's machine.
+processes. All build operations happen in a sandboxed environment without compromising the developer's machine.
 
 ## Requirements
 
