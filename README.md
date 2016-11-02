@@ -1,43 +1,40 @@
 # Build Inspector
 
-[Build Inspector](https://github.com/srcclr/build-inspector) is a forensic sandbox for buliding source code and gives insight into what's happening during the build of a project. It's language and build system agnostic and is capable of inspecting network activities, file system changes, and running
-processes. All build operations happen in a sandboxed environment without compromising the developer's machine.
+Build Inspector is a forensic sandbox for Continuous Integration environments.
+Ever wonder what's happening during your builds? Build Inspector monitors network activity, file system changes, and running processes, making it easier to spot unintended and potentially dangerous activities. Using a sandboxed environment, build operations will happen in isolation without compromising the machine.
 
 ## Requirements
 
 - [Ruby](https://www.ruby-lang.org/en/downloads/) (2.2.3 recommended)
 - [Vagrant](https://www.vagrantup.com/)
+- [Bundler](http://bundler.io/)
 
-Once you have both Ruby and Vagrant installed, go ahead and install
-the Sahara plugin, bundler and this project's dependencies.
+Once those are installed, add the [Sahara Vagrant plugin](https://github.com/jedi4ever/sahara)
+and bundle install this project's dependencies:
 
 ```bash
 vagrant plugin install sahara
 git clone https://github.com/srcclr/build-inspector.git
-gem install bundler
 bundle install
 ```
 
 ## Running
 
-First, make sure that you have the
-[requirements](https://github.com/srcclr/build-inspector#requirements)
-and you are inside the repository's directory.
+Once you're set up, you'll work with Build Inspector from inside the repository's directory:
 
 ```bash
 cd build_inspector
 ```
 
-Since this tool does not manage Vagrant for you, yet, you'll have to
-do it yourself. This step will take a while the first time, but won't
-be necessary again. Eventually, this step will be eliminated. Start
-Vagrant and build the image:
+Build Inspector does not manage Vagrant for you, so you'll need to do that yourself.
+The first time you use it, you'll need to start Vagrant and build the image:
 
 ```bash
 vagrant up
 ```
 
 Once vagrant is started, save a snapshot with:
+
 ```bash
 vagrant sandbox on
 ```
@@ -95,7 +92,7 @@ network and process activity, file system changes, and any new processes.
 This bundler project has a gem that pings Google during its
 installation.
 
-Run it with the Build Inspector and you should see a list of domains
+Run it with Build Inspector and you'll see a list of domains
 that the machine tried to connect to.
 
 ```
@@ -122,10 +119,9 @@ persistent backdoor using `netcat`.
 
 ### Configuration
 
-The tool monitors all network and file system activities. To ignore
-hosts or exclude directories from the monitoring, create and add an
-`config.yml` in the repository. The `config.yml` file is simply
-a YAML file that looks like this:
+Build Inspector monitors all network and file system activities. To ignore
+hosts or exclude directories from the monitoring, create and add a
+`config.yml` in the repository that looks like this:
 
 ```yaml
 ---
@@ -147,26 +143,28 @@ evidence_files:
 ```
 
 There are examples for different build systems in the [configs](configs)
-directory. You may copy the approriate configs for your build system
-to the root of this project or you may write one from scratch.
+directory. You may copy the appropriate configs for your build system
+to the root of this project or you can write one from scratch.
 
 ## Reporting Suspicious Builds
 
-Help us understand what threats are out there in the wild by submitting any suspicious builds you encounter. This helps us direct engineering efforts to better protect against emerging threats and also just makes us feel like we're helping.
+Help us understand what threats are out there in the wild by submitting any suspicious builds you encounter. This helps us protect against emerging threats, and ensure they're more widely known.
 
 To submit a suspicious build, just click this link to create a new issue:
 [Suspicious Build Issue Submission](https://github.com/srcclr/build-inspector/issues/new?title=Suspicious%20Build%20Evidence&body=Where%20did%20you%20find%20this%20project%3F%0A%0AWhy%20do%20you%20think%20it%27s%20suspicious%3F%0A%0AAny%20other%20important%20details%3F%0A%0AHow%20are%20you%20doing%20today%3F).
 
-Then, simply upload the evidence zip to the GitHub issue you just created. Thanks in advance!
+Then just drag the evidence zip file to the issue you just created to attach it. Thanks in advance!
 
 ## Troubleshooting
 
 If you're having a problem, try running `rake vagrant:test` and ensure your environment is setup correctly.
 
 ### Gradle Build Fails with java.lang.OutOfMemoryError
+
 A build may work on the host machine but fail with BuildInspector because the Vagrant virtual machine has less memory available than the host machine. There are two ways to work around this issue.
 
 #### Option 1: Modify [Vagrantfile](Vagrantfile)
+
 This is the most direct option. This file is used to setup some properties of the virtual machine. The relevant section is:
 ```ruby
 config.vm.provider 'virtualbox' do |vb|
@@ -179,6 +177,7 @@ end
 Simply adjust `vb.memory = 1024` to some other number such as `vb.memory = 2000` then rebuild the machine with `rake vagrant:rebuild`. The Java VM determines heap space as a portion of total memory available. Increasing the memory will also increase the heap space.
 
 #### Option 2: Adjust Java VM Heap Size
+
 If you're unable to adjust the memory requirements for the Vagrant virtual machine, you can try to tell Gradle to tell the Java VM to allocate more heap space. This can be done by adding the following command to your configuration:
 
 ```bash
