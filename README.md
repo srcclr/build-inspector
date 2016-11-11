@@ -14,7 +14,7 @@ and bundle install this project's dependencies:
 
 ```bash
 vagrant plugin install sahara
-git clone https://github.com/srcclr/build-inspector.git
+git clone https://github.com/sourceclear/build-inspector.git
 bundle install
 ```
 
@@ -151,7 +151,7 @@ to the root of this project or you can write one from scratch.
 Help us understand what threats are out there in the wild by submitting any suspicious builds you encounter. This helps us protect against emerging threats, and ensure they're more widely known.
 
 To submit a suspicious build, just click this link to create a new issue:
-[Suspicious Build Issue Submission](https://github.com/srcclr/build-inspector/issues/new?title=Suspicious%20Build%20Evidence&body=Where%20did%20you%20find%20this%20project%3F%0A%0AWhy%20do%20you%20think%20it%27s%20suspicious%3F%0A%0AAny%20other%20important%20details%3F%0A%0AHow%20are%20you%20doing%20today%3F).
+[Suspicious Build Issue Submission](https://github.com/sourceclear/build-inspector/issues/new?title=Suspicious%20Build%20Evidence&body=Where%20did%20you%20find%20this%20project%3F%0A%0AWhy%20do%20you%20think%20it%27s%20suspicious%3F%0A%0AAny%20other%20important%20details%3F%0A%0AHow%20are%20you%20doing%20today%3F).
 
 Then just drag the evidence zip file to the issue you just created to attach it. Thanks in advance!
 
