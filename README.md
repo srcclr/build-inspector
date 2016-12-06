@@ -50,13 +50,17 @@ Usage inspector [options] <git repo path>
     -p, --process <PATH>             Only process evidence at <PATH>
     -b, --branch <BRANCH>            Clone <BRANCH> from repository URL
         --url                        Git repo path is a URL
+        --gem                        Perform a GEM based build
+        --gradle                     Perform a Gradle based build
+        --maven                      Perform a Maven based build
+        --npm                        Perform a NPM based build
+
 ```
 
 ### Gradle Example
 
 ```bash
-cp configs/gradle.yml config.yml
-./inspector test-repos/TotallyLegitApp
+./inspector --gradle test-repos/TotallyLegitApp
 ```
 
 The above project has a task called `backdoor` that adds a reverse
@@ -83,8 +87,7 @@ network and process activity, file system changes, and any new processes.
 ### Bundler Example
 
 ```bash
-cp configs/bundler.yml config.yml
-./inspector test-repos/harmless-project
+./inspector --gem test-repos/harmless-project
 ```
 
 This bundler project has a gem that pings Google during its
@@ -101,8 +104,7 @@ Hosts contacted:
 ### NPM Example
 
 ```bash
-cp configs/npm.yml config.yml
-./inspector test-repos/ann-pee-am
+./inspector --npm test-repos/ann-pee-am
 ```
 
 Inspecting this NPM project should yield the following output:
