@@ -137,7 +137,8 @@ whisperer.snapshot
 inspector.inspect
 
 evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
-collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name)
+config_name = options[:config]
+collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name, config_name: config_name)
 puts Printer.yellowify('Collecting evidence ...')
 collector.collect
 whisperer.rollback if options[:rollback]

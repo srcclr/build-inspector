@@ -20,9 +20,10 @@ require_relative 'build_inspector'
 require_relative 'vagrant_whisperer'
 
 class EvidenceCollector
-  def initialize(whisperer:, evidence_name:, verbose: false)
+  def initialize(whisperer:, evidence_name:, config_name:, verbose: false)
     @whisperer = whisperer
     @evidence_name = evidence_name
+    @config_name = config_name
     @verbose = verbose
   end
 
@@ -42,8 +43,9 @@ class EvidenceCollector
   private
 
   def copy_configuration
-    dest_file = File.join(@evidence_name, 'config.yml')
-    FileUtils.copy_file('config.yml', dest_file)
+    dest_file = File.join(@evidence_name, @config_name)
+    FileUtils.mkdir_p(File.dirname(dest_file))
+    FileUtils.copy_file(@config_name, dest_file)
   end
 
   def copy_snoopy_log
