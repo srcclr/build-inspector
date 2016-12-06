@@ -54,6 +54,7 @@ Usage inspector [options] <git repo path>
         --gradle                     Perform a Gradle based build
         --maven                      Perform a Maven based build
         --npm                        Perform a NPM based build
+
 ```
 
 ### Gradle Example
