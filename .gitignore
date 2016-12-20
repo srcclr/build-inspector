@@ -7,3 +7,6 @@ evidence-*.zip
 
 # Ignore local configuration
 config.yml
+
+# Rubymine
+.idea/*
