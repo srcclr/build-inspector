@@ -135,6 +135,29 @@ class EvidenceProcessor
       .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
   end
 
+  def get_insecure_connections
+    pcap_file = File.join(@evidence_path, BuildInspector::PCAP_FILE)
+    packet_inspector = PacketInspector.new(pcap_file)
+    hosts_contacted_via_http = {}
+
+    dns_responses = packet_inspector.dns_responses
+    address_to_name = dns_responses.each_with_object({}) do |name_addresses, memo|
+      name = name_addresses.first
+      addresses = name_addresses.last
+      addresses.each { |address| memo[address.to_s] = name }
+    end
+
+    packet_inspector.http_requests.each do |request|
+      if address_to_name.key?(request)
+        hosts_contacted_via_http[address_to_name[request]] = request
+      else
+        hosts_contacted_via_http[request] = request
+      end
+    end
+
+    hosts_contacted_via_http.map { |host, address| [host, address] }
+  end
+
   def get_filesystem_changes
     changes_file = File.join(@evidence_path, BuildInspector::FILESYSTEM_CHANGES_FILE)
     lines = IO.readlines(changes_file)
