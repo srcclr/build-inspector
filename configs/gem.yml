@@ -1,13 +1,15 @@
 ---
 
 commands:
-  - mvn package
+  - gem install
 
 # Exclude these hosts and IP addresses from network monitoring
 host_whitelist:
   - 10.0.2.2 # VirtualBox's address
-  - repo.maven.apache.org
-  - repo1.maven.org
+  - bundler.rubygems.org
+  - index.rubygems.org
+  - rubygems.global.ssl.fastly.net
+  - rubygems.org
 
 # Files or directories which should be included or excluded from evidence collection
 evidence_files:
@@ -15,7 +17,8 @@ evidence_files:
     - /backup
     - /dev
     - /evidence
-    - /home/vagrant/.m2
+    - /home/vagrant/.gem
+    - /home/vagrant/.rvm
     - /home/vagrant/repo
     - /lost+found
     - /media

@@ -68,20 +68,36 @@ optparse = OptionParser.new do |opts|
     options[:branch] = branch
   end
 
+  opts.on('-P', '--package <PACKAGE>', String, 'Install specified <PACKAGE>') do |package|
+    options[:package] = package
+  end
+
   opts.on('--url', String, "Git repo path is a URL") do
     options[:is_url] = true
   end
 
   opts.on('--gem', String, "Perform a GEM based build") do |type|
-    options[:config] = 'configs/bundler.yml'
+    if options[:package]
+      options[:config] = 'configs/gem.yml'
+    else
+      options[:config] = 'configs/bundler.yml'
+    end
   end
 
   opts.on('--gradle', String, "Perform a Gradle based build") do |type|
     options[:config] = 'configs/gradle.yml'
+
+    if options[:package]
+      options[:package] = nil
+    end
   end
 
   opts.on('--maven', String, "Perform a Maven based build") do |type|
     options[:config] = 'configs/maven.yml'
+
+    if options[:package]
+      options[:package] = nil
+    end
   end
 
   opts.on('--npm', String, "Perform a NPM based build") do |type|
@@ -91,7 +107,7 @@ end
 optparse.parse!
 
 whisperer = VagrantWhisperer.new(verbose: options[:verbose])
-config = Configuration.new(options[:config])
+config = Configuration.new(options[:config], options[:package])
 
 if options[:only_process]
   evidence_path = options[:only_process]

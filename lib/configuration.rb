@@ -19,10 +19,11 @@ require 'yaml'
 class Configuration
   attr_reader :config
 
-  def initialize(config = 'config.yml')
+  def initialize(config = 'config.yml', package = nil)
     @config = YAML.load_file(config) if File.exist?(config)
     @config ||= {}
     @config['evidence_files'] ||= {}
+    @config['commands'] = ["#{@config['commands'].first} #{package}"] if package
     @excluded = @config['evidence_files'].fetch('exclude', [])
     @included = @config['evidence_files'].fetch('include', [])
   end
