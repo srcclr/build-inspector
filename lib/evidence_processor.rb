@@ -147,15 +147,17 @@ class EvidenceProcessor
       addresses.each { |address| memo[address.to_s] = name }
     end
 
-    packet_inspector.http_requests.each do |request|
+    packet_inspector.http_requests.each do |request, path|
       if address_to_name.key?(request)
-        hosts_contacted_via_http[address_to_name[request]] = request
+        (hosts_contacted_via_http[address_to_name[request]] ||= []) << (path if !hosts_contacted_via_http[address_to_name[request]].include?(path))
       else
-        hosts_contacted_via_http[request] = request
+        (hosts_contacted_via_http[request] ||= []) << (path if !hosts_contacted_via_http[address_to_name[request]].include?(path))
       end
     end
 
-    hosts_contacted_via_http.map { |host, address| [host, address] }
+    hosts_contacted_via_http.map { |host, address|
+      [host, address.compact]
+    }
   end
 
   def get_filesystem_changes

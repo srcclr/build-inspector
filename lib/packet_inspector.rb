@@ -16,6 +16,7 @@ limitations under the License.
 
 require 'packetfu'
 require 'resolv'
+require 'webrick'
 
 class PacketInspector
   include PacketFu
@@ -26,6 +27,7 @@ class PacketInspector
 
   def initialize(pcap_file)
     @packets = PcapFile.read_packets(pcap_file)
+    @req = WEBrick::HTTPRequest.new(WEBrick::Config::HTTP)
   end
 
   def packets_from(src_ip)
@@ -59,7 +61,19 @@ class PacketInspector
   end
 
   def http_requests
-    tcp_packets_with_dst_port(HTTP_PORT).map { |packet| packet.ip_daddr }
+    tcp_packets_with_dst_port(HTTP_PORT).map { |packet|
+      if packet.tcp_header.body != ''
+        path = ''
+        begin
+          @req.parse(StringIO.new(packet.tcp_header.body))
+          path = @req.path
+        rescue
+        end
+        [packet.ip_daddr, path]
+      else
+        [packet.ip_daddr, '']
+      end
+    }
   end
 
   def http_responses
