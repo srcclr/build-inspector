@@ -85,7 +85,7 @@ class EvidenceProcessor
 
   def get_unfiltered_processes
     snoopy_path = File.join(@evidence_path, BuildInspector::PROCESSES_FILE)
-    IO.readlines(snoopy_path)
+    IO.readlines(snoopy_path, :encoding => 'ISO-8859-1')
   end
 
   def get_processes
