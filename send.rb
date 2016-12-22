@@ -14,6 +14,6 @@ payload = {
 
 ch.default_exchange.publish(payload.to_json, :routing_key => q.name)
 
-puts " [x] Sent '#{payload}'"
+puts " [x] Sent '#{payload.to_json}'"
 
 conn.close

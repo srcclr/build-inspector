@@ -2,6 +2,25 @@
 require 'bunny'
 require 'aws-sdk'
 require 'json'
+require_relative 'inspector_lib'
+require 'fileutils'
+
+def upload(file)
+  puts " [x] Uploading #{file}..."
+  s3 = Aws::S3::Resource.new(region:'us-east-1')
+  obj = s3.bucket('build-inspector').object(File.basename(file))
+  obj.upload_file(file)
+  puts " [x] Uploaded #{file}"
+end
+
+def destroy_evidence
+  files = Dir['*.zip']
+  files.each do |f|
+    upload(f)
+    File.delete(f)
+  end
+  files.map { |f| File.basename(f, '.*') }.each { |f| FileUtils.remove_dir(f) }
+end
 
 conn = Bunny.new
 conn.start
@@ -18,15 +37,15 @@ q.subscribe(:block => true) do |delivery_info, properties, body|
 
   payload = JSON.parse(body)
 
-  `./inspector --#{payload[:type]} --package=#{payload[:library]} test-repos/TotallyLegitApp`
+  run_inspector({rollback: true,
+    config: "configs/#{payload['type']}.yml",
+    branch: 'master',
+    only_process: nil,
+    is_url: false,
+    verbose: false,
+    package: payload['library']
+  }, 'test-repos/TotallyLegitApp')
 
-  file = File.new(`ls *.zip`)
-  upload(file)
-  File.delete(file)
-end
-
-def upload(file)
-  s3 = Aws::S3::Resource.new(region:'us-west-2')
-  obj = s3.bucket('build-inspector').object(File.basename(file))
-  obj.upload_file(File.absolute_path(file))
+  destroy_evidence
+  puts " [x] Finished processing #{body}"
 end
