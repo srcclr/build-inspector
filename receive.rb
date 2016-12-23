@@ -44,7 +44,7 @@ q.subscribe(:block => true) do |delivery_info, properties, body|
     is_url: false,
     verbose: false,
     package: payload['library']
-  }, 'test-repos/TotallyLegitApp')
+  })
 
   destroy_evidence
   puts " [x] Finished processing #{body}"

@@ -49,7 +49,9 @@ def run_inspector(options, repo_path=nil)
   whisperer.snapshot
   inspector.inspect
 
-  evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
+  evidence_file_name = "#{options[:package_manager]}-#{repo_name}"
+  evidence_name = "evidence-#{evidence_file_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
+
   config_name = options[:config]
   collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name, config_name: config_name)
   puts Printer.yellowify('Collecting evidence ...')

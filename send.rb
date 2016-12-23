@@ -6,7 +6,7 @@ SUPPORTED_LIBRARY_TYPES = %w(npm gem)
 conn = Bunny.new
 conn.start
 @ch = conn.create_channel
-q = ch.queue('build-inspector-repos')
+@q = @ch.queue('build-inspector-repos')
 
 
 def generate_payload(type, library)
@@ -22,7 +22,7 @@ def load_libraries(type)
 end
 
 def send(payload)
-  @ch.default_exchange.publish(payload.to_json, :routing_key => q.name)
+  @ch.default_exchange.publish(payload.to_json, :routing_key => @q.name)
   puts " [x] Sent '#{payload.to_json}'"
 end
 

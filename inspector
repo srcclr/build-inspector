@@ -78,6 +78,8 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--gem', String, "Perform a GEM based build") do |type|
+    options[:package_manager] = 'gem'
+
     if options[:package]
       options[:config] = 'configs/gem.yml'
     else
@@ -86,6 +88,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--gradle', String, "Perform a Gradle based build") do |type|
+    options[:package_manager] = 'gradle'
     options[:config] = 'configs/gradle.yml'
 
     if options[:package]
@@ -94,6 +97,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--maven', String, "Perform a Maven based build") do |type|
+    options[:package_manager] = 'maven'
     options[:config] = 'configs/maven.yml'
 
     if options[:package]
@@ -102,6 +106,7 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('--npm', String, "Perform a NPM based build") do |type|
+    options[:package_manager] = 'npm'
     options[:config] = 'configs/npm.yml'
   end
 end
