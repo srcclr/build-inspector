@@ -55,6 +55,14 @@ class VagrantWhisperer
   def rollback
     puts Printer.yellowify('Rolling back virtual machine state ...')
     Printer.exec_puts 'vagrant sandbox rollback'
+    ensure_ready
+  end
+
+  def ensure_ready
+    while ssh_exec('echo ready', stream: true).strip != 'ready' do
+      puts "VM is not yet ready; waiting..."
+      sleep(10)
+    end
   end
 
   def send_file(local_path, remote_path)
