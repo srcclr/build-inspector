@@ -48,7 +48,8 @@ q.subscribe(:block => true) do |delivery_info, properties, body|
     only_process: nil,
     is_url: false,
     verbose: false,
-    package: payload['library']
+    package: payload['library'],
+    package_manager: payload['type']
   })
 
   destroy_evidence
