@@ -107,7 +107,7 @@ optparse = OptionParser.new do |opts|
 end
 optparse.parse!
 
-if ARGV.size < 1
+if ARGV.size < 1 and options[:package] == nil
   puts 'Must specifiy a repository URL'
   puts optparse.help
   exit -1

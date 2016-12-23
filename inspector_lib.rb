@@ -7,7 +7,7 @@ require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
 require_relative 'lib/report_builder'
 
-def run_inspector(options, repo_path)
+def run_inspector(options, repo_path=nil)
 
   whisperer = VagrantWhisperer.new(verbose: options[:verbose])
   config = Configuration.new(options[:config], options[:package])
@@ -28,8 +28,9 @@ def run_inspector(options, repo_path)
 
   whisperer.up
 
-  repo_name = nil
-  if options[:is_url]
+  if options[:package]
+    repo_name = options[:package]
+  elsif options[:is_url]
     repo_name = repo_path.split('/').last.chomp('.git')
   else
     repo_name = File.basename(repo_path)
@@ -40,7 +41,7 @@ def run_inspector(options, repo_path)
   end
 
   inspector = BuildInspector.new(
-    whisperer: whisperer, repo_path: repo_path,
+    whisperer: whisperer, repo_path: repo_path, package: options[:package],
     is_url: options[:is_url], repo_branch: options[:branch],
     commands: config.commands, evidence_files: config.evidence_files
   )
