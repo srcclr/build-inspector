@@ -12,7 +12,7 @@ conn = Bunny.new(host: bunny_host, port: bunny_port, user: bunny_user, password:
 conn.start
 
 @ch = conn.create_channel
-@q = @ch.queue('build-inspector-repos')
+@q = @ch.queue('build-inspector-repos', durable: true)
 
 
 def generate_payload(type, library)
@@ -28,7 +28,7 @@ def load_libraries(type)
 end
 
 def send(payload)
-  @ch.default_exchange.publish(payload.to_json, :routing_key => @q.name)
+  @ch.default_exchange.publish(payload.to_json, routing_key: @q.name, persistent: true)
   puts " [x] Sent '#{payload.to_json}'"
 end
 

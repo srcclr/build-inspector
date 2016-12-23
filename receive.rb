@@ -31,7 +31,12 @@ conn = Bunny.new(host: bunny_host, port: bunny_port, user: bunny_user, password:
 conn.start
 
 ch = conn.create_channel
-q = ch.queue('build-inspector-repos')
+
+# Ensure that workers only get one message at a time
+n = 1;
+ch.prefetch(n);
+
+q = ch.queue('build-inspector-repos', durable: true)
 
 puts " [*] Waiting for messages in #{q.name}. To exit press CTRL+C"
 q.subscribe(:block => true) do |delivery_info, properties, body|
