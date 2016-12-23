@@ -49,7 +49,6 @@ q.subscribe(:block => true, manual_ack: true) do |delivery_info, properties, bod
 
   run_inspector({rollback: true,
     config: "configs/#{payload['type']}.yml",
-    branch: 'master',
     only_process: nil,
     is_url: false,
     verbose: false,

@@ -108,6 +108,7 @@ class BuildInspector
 
   def build
     @whisperer.run(message: 'Starting build ...') do |commands|
+      # TODO inspecting a directory that's not a git repository will show errors
       commands << "cd #{REPO_PATH}"
       commands << "git submodule init"
       commands.concat(@commands)
