@@ -39,7 +39,7 @@ ch.prefetch(n);
 q = ch.queue('build-inspector-repos', durable: true)
 
 puts " [*] Waiting for messages in #{q.name}. To exit press CTRL+C"
-q.subscribe(:block => true) do |delivery_info, properties, body|
+q.subscribe(:block => true, manual_ack: true) do |delivery_info, properties, body|
   puts " [x] Received #{body}"
 
   # cancel the consumer to exit
@@ -58,5 +58,6 @@ q.subscribe(:block => true) do |delivery_info, properties, body|
   })
 
   destroy_evidence
+  ch.ack(delivery_info.delivery_tag)
   puts " [x] Finished processing #{body}"
 end
