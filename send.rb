@@ -3,8 +3,14 @@ require 'json'
 
 SUPPORTED_LIBRARY_TYPES = %w(npm gem)
 
-conn = Bunny.new
+bunny_host = ENV['BUNNY_HOST'] || 'localhost'
+bunny_port = ENV['BUNNY_PORT'] || 5672
+bunny_user = ENV['BUNNY_USER'] || 'guest'
+bunny_pass = ENV['BUNNY_PASS'] || 'guest'
+
+conn = Bunny.new(host: bunny_host, port: bunny_port, user: bunny_user, password: bunny_pass)
 conn.start
+
 @ch = conn.create_channel
 @q = @ch.queue('build-inspector-repos')
 
