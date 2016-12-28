@@ -59,9 +59,16 @@ class VagrantWhisperer
   end
 
   def ensure_ready
+    attempts = 0
     while ssh_exec('echo ready', stream: true).strip != 'ready' do
-      puts "VM is not yet ready; waiting..."
-      sleep(10)
+      attempts += 1
+      if attempts < 5 and attempts >= 0
+        puts "VM is not yet ready; waiting..."
+        sleep(120)
+      else
+        puts "VM failed. Exiting"
+        exit
+      end
     end
   end
 

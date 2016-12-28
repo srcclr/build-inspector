@@ -83,6 +83,14 @@ class EvidenceProcessor
     print_running_processes
   end
 
+  def process_evidence(path)
+    if require_relative path
+      p "Processing evidence at #{path}"
+    else
+      p 'Failed to load script'
+    end
+  end
+
   def get_unfiltered_processes
     snoopy_path = File.join(@evidence_path, BuildInspector::PROCESSES_FILE)
     IO.readlines(snoopy_path, :encoding => 'ISO-8859-1')

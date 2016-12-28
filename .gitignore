@@ -12,3 +12,6 @@ config.yml
 .idea/*
 
 libraries/*
+
+# Ignore any pcap folder for testing
+pcap/*
