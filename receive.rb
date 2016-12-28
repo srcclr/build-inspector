@@ -59,4 +59,5 @@ q.subscribe(:block => true, manual_ack: true) do |delivery_info, properties, bod
   destroy_evidence
   ch.ack(delivery_info.delivery_tag)
   puts " [x] Finished processing #{body}"
+  exit
 end
