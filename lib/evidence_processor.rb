@@ -91,8 +91,10 @@ class EvidenceProcessor
         exit -1
       end
       i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
-      i.run  # returns true/false
+      return i.run  # returns true/false
     end
+
+    false
   end
 
   def get_unfiltered_processes

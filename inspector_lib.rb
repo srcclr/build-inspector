@@ -43,7 +43,8 @@ def only_process(options, vagrant_ip, config, repo_path=nil)
   zipped_evidence_path = options[:only_process]
   evidence_path = zipped_evidence_path.sub(/(.*)\.zip/, '\1')
   EvidenceCollector.unzip(zipped_evidence_path, "#{evidence_path}")
-  evidence_name = "#{evidence_path}/evidence"
+  # evidence_name = "#{evidence_path}/evidence"
+  should_cleanup = true
 
   print_header
 
@@ -52,7 +53,7 @@ def only_process(options, vagrant_ip, config, repo_path=nil)
                                     host_whitelist: config.host_whitelist)
 
   if options[:script] and options[:script] != ''
-    processor.process_evidence(options[:script], options[:package_manager])
+    should_cleanup = !processor.process_evidence(options[:script], options[:package_manager])
   else
     processor.process
   end
@@ -61,7 +62,7 @@ def only_process(options, vagrant_ip, config, repo_path=nil)
   total_time = end_time - start_time
   puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds")
 
-  ReportBuilder.build("#{evidence_name}/build-report.html", repo_path, evidence_path, options, config, processor, start_time, end_time)
+  FileUtils.rm_rf(evidence_path, :secure=>true) if should_cleanup
 end
 
 
