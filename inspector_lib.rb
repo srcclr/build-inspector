@@ -51,8 +51,8 @@ def only_process(options, vagrant_ip, config, repo_path=nil)
                                     vagrant_ip: vagrant_ip,
                                     host_whitelist: config.host_whitelist)
 
-  if options[:script]
-    processor.process_evidence(evidence_path)
+  if options[:script] and options[:script] != ''
+    processor.process_evidence(options[:script], options[:package_manager])
   else
     processor.process
   end
