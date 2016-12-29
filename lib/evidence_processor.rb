@@ -88,7 +88,10 @@ class EvidenceProcessor
   def process_evidence(script_path, package_manager=nil)
     if script_path.include? 'insecure_network'
       i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
+      puts "Results: #{i.run.to_s.upcase}"
       return i.run  # returns true/false
+    else
+      puts ' [*] Script not found.'
     end
 
     false
