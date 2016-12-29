@@ -43,7 +43,7 @@ class BuildInspectorS3
   def get_evidences
     puts ' [x] Collecting new evidences...'
     @client.list_objects(bucket: bucket_name).each do |response|
-      not_analyzed_evidence = response.contents.map { |object| object[:key] if !@analyzed_evidence.key?(object[:key]) }.compact
+      not_analyzed_evidence = response.contents.map { |object| object[:key] if !@analyzed_evidence.key?(evidence_folder(object[:key])) }.compact
       @files.concat not_analyzed_evidence
     end
     puts " [x] Collected #{@files.length} new evidence(s)."
@@ -66,6 +66,11 @@ class BuildInspectorS3
 
 
   private
+
+  def evidence_folder(zipped_filename='')
+    filename = zipped_filename.sub(/(.*)\.zip/, '\1')
+    File.expand_path("../../#{@script_name}/#{filename}/evidence", __FILE__)
+  end
 
   def load_results(file)
     return {} if !file
