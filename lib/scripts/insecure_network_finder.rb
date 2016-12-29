@@ -44,13 +44,9 @@ class InsecureNetworkFinder < BuildInspectorScript
       hosts_contacted_via_http[host] = addresses.compact
     end
 
-    if !hosts_contacted_via_http.empty?
-      add_results(hosts_contacted_via_http)
-      save_results
-      true
-    else
-      false
-    end
+    add_results(hosts_contacted_via_http)
+    save_results
+    !hosts_contacted_via_http.empty?
   end
 
 

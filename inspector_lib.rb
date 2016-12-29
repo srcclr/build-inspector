@@ -42,7 +42,7 @@ end
 
 
 def process_s3(options, ip_address, config, repo_path)
-  b = BuildInspectorS3.new
+  b = BuildInspectorS3.new(options[:results], options[:script])
   b.get_evidences.each do |evidence|
     b.download(evidence)
     options[:only_process] = b.downloads_folder(evidence)

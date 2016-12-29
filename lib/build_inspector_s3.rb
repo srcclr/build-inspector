@@ -16,10 +16,11 @@ limitations under the License.
 
 require 'aws-sdk'
 require 'fileutils'
+require 'json'
 
 class BuildInspectorS3
 
-  def initialize
+  def initialize(results_file, script_name)
     if credentials_not_found
       puts 'Please ensure the secrets AWS_ACCESS_KEY_ID, and AWS_SECRET_ACCESS_KEY, are set in ENV.'
       exit -1
@@ -28,6 +29,8 @@ class BuildInspectorS3
     @uploader = Aws::S3::Resource.new(region: region_name)
     @client = Aws::S3::Client.new(region: region_name)
     @files = []
+    @analyzed_evidence = load_results(results_file)
+    @script_name = script_name
   end
 
   def upload(file)
@@ -38,13 +41,12 @@ class BuildInspectorS3
   end
 
   def get_evidences
-    puts ' [x] Collecting evidences...'
-    count = 0
+    puts ' [x] Collecting new evidences...'
     @client.list_objects(bucket: bucket_name).each do |response|
-      count += response.contents.length
-      @files.concat response.contents.map(&:key)
+      not_analyzed_evidence = response.contents.map { |object| object[:key] if !@analyzed_evidence.key?(object[:key]) }.compact
+      @files.concat not_analyzed_evidence
     end
-    puts " [x] Collected #{count} evidence(s)."
+    puts " [x] Collected #{@files.length} new evidence(s)."
     @files
   end
 
@@ -59,11 +61,23 @@ class BuildInspectorS3
   end
 
   def downloads_folder(filename='')
-    File.expand_path("../../downloads/#{filename}", __FILE__)
+    File.expand_path("../../#{@script_name}/#{filename}", __FILE__)
   end
 
 
   private
+
+  def load_results(file)
+    return {} if !file
+
+    if File.file?(file) and !File.zero?(file)
+      File.open(file, 'r') do |f|
+        @analyzed_evidence = JSON.load(f)
+      end
+    else
+      @analyzed_evidence = {}
+    end
+  end
 
   def create_download_dir
     dirname = downloads_folder

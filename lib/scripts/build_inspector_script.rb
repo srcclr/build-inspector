@@ -16,9 +16,10 @@ limitations under the License.
 
 class BuildInspectorScript
 
-  def initialize(evidence_path:, package_manager:)
+  def initialize(evidence_path:, package_manager:, host_whitelist:)
     @evidence_path = evidence_path
     @package_manager = package_manager || ''
+    @host_whitelist = host_whitelist
     @file_to_analyze = analysis_file_name
     @results = load_results
   end
@@ -34,11 +35,13 @@ class BuildInspectorScript
   private
 
   def add_results(results)
+    positive = (results and !results.empty?)
     payload = {'script': script_name,
                'version': version,
                'package_manager': @package_manager,
                'file_analyzed': @file_to_analyze,
-               'results': results}
+               'results': results,
+               'positive': positive}
     @results[@evidence_path] = payload
   end
 

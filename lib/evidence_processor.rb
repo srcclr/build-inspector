@@ -88,11 +88,11 @@ class EvidenceProcessor
 
   def process_evidence(script_path, package_manager=nil)
     if script_path.include? 'insecure_network'
-      i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
+      i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager, host_whitelist: @host_whitelist)
       puts "Results: #{i.run.to_s.upcase}"
       return i.run  # returns true/false
     elsif script_path.include? 'network_activity'
-      i = NetworkActivityFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
+      i = NetworkActivityFinder.new(evidence_path: @evidence_path, package_manager: package_manager, host_whitelist: @host_whitelist)
       puts "Results: #{i.run.to_s.upcase}"
       return i.run  # returns true/false
     else

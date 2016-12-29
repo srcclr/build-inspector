@@ -38,7 +38,8 @@ options = {
   only_process: nil,
   is_url: false,
   verbose: false,
-  repo: nil
+  repo: nil,
+  results: nil
 }
 
 optparse = OptionParser.new do |opts|
@@ -65,6 +66,11 @@ optparse = OptionParser.new do |opts|
   opts.on('-p', '--process <PATH>', String,
           'Only process evidence at <PATH>') do |evidence_path|
     options[:only_process] = evidence_path
+  end
+
+  opts.on('-r', '--results <PATH>', String,
+          'Load previously analyzed results at <PATH>') do |results_path|
+    options[:results] = results_path
   end
 
   opts.on('-s', '--script <PATH>', String,

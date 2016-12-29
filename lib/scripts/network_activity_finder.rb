@@ -24,20 +24,23 @@ class NetworkActivityFinder < BuildInspectorScript
     pcap_file = File.join(@evidence_path, @file_to_analyze)
     packet_inspector = PacketInspector.new(pcap_file)
 
+    # Whitelist the DNS' IP also; don't want it showing up
+    dns_server = Resolv::DNS::Config.default_config_hash[:nameserver]
+    whitelist = @host_whitelist
+    whitelist += dns_server if dns_server
+
     dns_responses = packet_inspector.dns_responses
     address_to_name = dns_responses.each_with_object({}) do |name_addresses, memo|
-      name = name_addresses.first
-      addresses = name_addresses.last
-      addresses.each { |address| memo[address.to_s] = name }
+      if !whitelist.include?(name_addresses.first)
+        name = name_addresses.first
+        addresses = name_addresses.last
+        addresses.each { |address| memo[address.to_s] = name if !whitelist.include?(address.to_s) }
+      end
     end
 
-    if !address_to_name.empty?
-      add_results(address_to_name)
-      save_results
-      true
-    else
-      false
-    end
+    add_results(address_to_name)
+    save_results
+    address_to_name and !address_to_name.empty?
   end
 
 
