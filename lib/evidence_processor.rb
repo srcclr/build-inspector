@@ -18,7 +18,8 @@ require 'resolv'
 require_relative 'build_inspector'
 require_relative 'packet_inspector'
 require_relative 'scripts/build_inspector_script'
-require_relative "scripts/insecure_network_finder.rb"
+require_relative 'scripts/insecure_network_finder'
+require_relative 'scripts/network_activity_finder'
 
 class EvidenceProcessor
   attr_reader :evidence_path
@@ -88,6 +89,10 @@ class EvidenceProcessor
   def process_evidence(script_path, package_manager=nil)
     if script_path.include? 'insecure_network'
       i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
+      puts "Results: #{i.run.to_s.upcase}"
+      return i.run  # returns true/false
+    elsif script_path.include? 'network_activity'
+      i = NetworkActivityFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
       puts "Results: #{i.run.to_s.upcase}"
       return i.run  # returns true/false
     else
