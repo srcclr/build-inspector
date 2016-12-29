@@ -18,6 +18,7 @@ require 'resolv'
 require_relative 'build_inspector'
 require_relative 'packet_inspector'
 require_relative 'scripts/build_inspector_script'
+require_relative "scripts/insecure_network_finder.rb"
 
 class EvidenceProcessor
   attr_reader :evidence_path
@@ -86,10 +87,6 @@ class EvidenceProcessor
 
   def process_evidence(script_path, package_manager=nil)
     if script_path.include? 'insecure_network'
-      if !require_relative "./scripts/insecure_network_finder.rb"
-        p 'Failed to load script'
-        exit -1
-      end
       i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager)
       return i.run  # returns true/false
     end

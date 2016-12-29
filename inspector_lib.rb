@@ -6,6 +6,7 @@ require_relative 'lib/evidence_processor'
 require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
 require_relative 'lib/report_builder'
+require_relative 'lib/build_inspector_s3'
 
 
 def run_inspector(options, repo_path=nil)
@@ -19,7 +20,9 @@ def run_inspector(options, repo_path=nil)
   whisperer = VagrantWhisperer.new(verbose: options[:verbose])
   config = Configuration.new(config_file, options[:package])
 
-  if options[:only_process]
+  if options[:s3]
+    process_s3(options, whisperer.ip_address, config, repo_path)
+  elsif options[:only_process]
     only_process(options, whisperer.ip_address, config, repo_path)
   else
     collect_evidence_and_build_report(options, repo_path, whisperer, config)
@@ -38,11 +41,23 @@ def print_header
 end
 
 
+def process_s3(options, ip_address, config, repo_path)
+  b = BuildInspectorS3.new
+  b.get_evidences.each do |evidence|
+    b.download(evidence)
+    options[:only_process] = b.downloads_folder(evidence)
+    only_process(options, ip_address, config, repo_path)
+    File.delete(b.downloads_folder(evidence))
+  end
+end
+
+
 def only_process(options, vagrant_ip, config, repo_path=nil)
   start_time = Time.now
   zipped_evidence_path = options[:only_process]
   evidence_path = zipped_evidence_path.sub(/(.*)\.zip/, '\1')
   EvidenceCollector.unzip(zipped_evidence_path, "#{evidence_path}")
+
   # evidence_name = "#{evidence_path}/evidence"
   should_cleanup = true
 

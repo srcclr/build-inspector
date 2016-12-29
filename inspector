@@ -33,7 +33,7 @@ options = {
   rollback: true,
   config: 'config.yml',
   branch: 'master',
-  results: 'results/results.json',
+  s3: false,
   script: nil,
   only_process: nil,
   is_url: false,
@@ -119,11 +119,14 @@ optparse = OptionParser.new do |opts|
   end
 end
 
+
 optparse.parse!
+
 
 no_package_to_analyze = (ARGV.size < 1 and options[:package] == nil)
 no_evidence_to_process = options[:only_process] == nil
 no_script_to_run = ((ARGV.size < 1 and options[:script] == nil) or (options[:only_process] == nil and options[:script] == nil))
+
 
 if no_package_to_analyze and no_evidence_to_process and no_script_to_run
   puts 'Please specify a repository URL or Path; Or an evidence to process; Or a script to run on a/an repo/evidence'
@@ -134,15 +137,23 @@ elsif no_package_to_analyze and no_evidence_to_process and !no_script_to_run
   exit -1
 end
 
+
 if ARGV.size >= 1 and options[:package] != nil
   puts "Package detected, Repo path #{ARGV.first} will be ignored"
 elsif ARGV.size >= 1
   options[:repo] = ARGV.first
 end
 
+
 if !no_evidence_to_process
   process_script_text = "with script at #{options[:script]}" if options[:script]
-  puts "Processing evidence at #{options[:only_process]} #{process_script_text}"
+
+  if options[:only_process] == 's3'
+    puts "Processing evidence stored in S3 #{process_script_text}"
+    options[:s3] = true
+  else
+    puts "Processing evidence at #{options[:only_process]} #{process_script_text}"
+  end
 
   if !no_package_to_analyze
     if options[:repo]
@@ -156,5 +167,6 @@ if !no_evidence_to_process
     end
   end
 end
+
 
 run_inspector(options, options[:repo])
