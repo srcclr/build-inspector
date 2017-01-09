@@ -6,6 +6,7 @@ commands:
 # Exclude these hosts and IP addresses from network monitoring
 host_whitelist:
   - 10.0.2.2 # VirtualBox's address
+  - api.rubigems.org
   - bundler.rubygems.org
   - index.rubygems.org
   - rubygems.global.ssl.fastly.net
