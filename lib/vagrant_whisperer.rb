@@ -120,7 +120,7 @@ class VagrantWhisperer
     ssh_opts = {}
     config.lines.map(&:strip).each do |e|
       next if e.empty?
-      k, v = e.split(/\s+/)
+      k, v = e.split(/\s+/, 2)
       ssh_opts[k] = v
     end
 
