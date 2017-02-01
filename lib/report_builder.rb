@@ -27,6 +27,7 @@ class ReportBuilder
 
     file_changes = processor.get_filesystem_changes * "\n"
     network_activity = processor.get_connections * "\n"
+    insecure_network_activity = processor.get_insecure_connections * "\n"
     running_processes = processor.get_running_processes * "\n"
     executed_commands = processor.get_processes * "\n"
     all_commands = processor.get_unfiltered_processes * "\n"

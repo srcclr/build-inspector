@@ -24,6 +24,7 @@ require_relative 'lib/evidence_processor'
 require_relative 'lib/printer'
 require_relative 'lib/vagrant_whisperer'
 require_relative 'lib/report_builder'
+require_relative 'inspector_lib'
 
 # Don't buffer output; flush it immediately.
 $stdout.sync = true
@@ -32,9 +33,13 @@ options = {
   rollback: true,
   config: 'config.yml',
   branch: 'master',
+  s3: false,
+  script: nil,
   only_process: nil,
   is_url: false,
   verbose: false,
+  repo: nil,
+  results: nil
 }
 
 optparse = OptionParser.new do |opts|
@@ -59,8 +64,18 @@ optparse = OptionParser.new do |opts|
   end
 
   opts.on('-p', '--process <PATH>', String,
-          "Only process evidence at <PATH>") do |evidence_path|
+          'Only process evidence at <PATH>') do |evidence_path|
     options[:only_process] = evidence_path
+  end
+
+  opts.on('-r', '--results <PATH>', String,
+          'Load previously analyzed results at <PATH>') do |results_path|
+    options[:results] = results_path
+  end
+
+  opts.on('-s', '--script <PATH>', String,
+          'Run script at <PATH> against evidence.') do |script|
+    options[:script] = script
   end
 
   opts.on('-b', '--branch <BRANCH>', String,
@@ -68,88 +83,96 @@ optparse = OptionParser.new do |opts|
     options[:branch] = branch
   end
 
+  opts.on('-P', '--package <PACKAGE>', String, 'Install specified <PACKAGE>') do |package|
+    options[:package] = package
+  end
+
   opts.on('--url', String, "Git repo path is a URL") do
     options[:is_url] = true
   end
 
   opts.on('--gem', String, "Perform a GEM based build") do |type|
-    options[:config] = 'configs/bundler.yml'
+    options[:package_manager] = 'gem'
+
+    if options[:package]
+      options[:config] = 'configs/gem.yml'
+    else
+      options[:config] = 'configs/bundler.yml'
+    end
   end
 
   opts.on('--gradle', String, "Perform a Gradle based build") do |type|
+    options[:package_manager] = 'gradle'
     options[:config] = 'configs/gradle.yml'
+
+    if options[:package]
+      options[:package] = nil
+    end
   end
 
   opts.on('--maven', String, "Perform a Maven based build") do |type|
+    options[:package_manager] = 'maven'
     options[:config] = 'configs/maven.yml'
+
+    if options[:package]
+      options[:package] = nil
+    end
   end
 
   opts.on('--npm', String, "Perform a NPM based build") do |type|
+    options[:package_manager] = 'npm'
     options[:config] = 'configs/npm.yml'
   end
 end
+
+
 optparse.parse!
 
-whisperer = VagrantWhisperer.new(verbose: options[:verbose])
-config = Configuration.new(options[:config])
 
-if options[:only_process]
-  evidence_path = options[:only_process]
-  process_evidence(evidence_path, whisperer.ip_address, config.host_whitelist)
-  exit 0
-end
+no_package_to_analyze = (ARGV.size < 1 and options[:package] == nil)
+no_evidence_to_process = options[:only_process] == nil
+no_script_to_run = ((ARGV.size < 1 and options[:script] == nil) or (options[:only_process] == nil and options[:script] == nil))
 
-if ARGV.size < 1
-  puts 'Must specifiy a repository URL'
+
+if no_package_to_analyze and no_evidence_to_process and no_script_to_run
+  puts 'Please specify a repository URL or Path; Or an evidence to process; Or a script to run on a/an repo/evidence'
   puts optparse.help
+  exit -1
+elsif no_package_to_analyze and no_evidence_to_process and !no_script_to_run
+  puts 'Please specify an/a evidence/package/repo to be processed with --process, --package, --url, or <REPO PATH>'
   exit -1
 end
 
-puts '****************************** [:] ******************************'
-puts '* Build Inspector - SRC:CLR - https://www.sourceclear.com/      *'
-puts '* Security for open-source code.                   *'
-puts '****************************** [:] ******************************'
-puts "\n"
 
-start_time = Time.now
+if ARGV.size >= 1 and options[:package] != nil
+  puts "Package detected, Repo path #{ARGV.first} will be ignored"
+elsif ARGV.size >= 1
+  options[:repo] = ARGV.first
+end
 
-whisperer.up
 
-repo_path = ARGV.first
-repo_name = nil
-if options[:is_url]
-  repo_name = repo_path.split('/').last.chomp('.git')
-else
-  repo_name = File.basename(repo_path)
-  unless File.exists?(repo_path)
-    puts "The repo path #{repo_path} does not exist. Did you mean to use --url ?"
-    exit -1
+if !no_evidence_to_process
+  process_script_text = "with script at #{options[:script]}" if options[:script]
+
+  if options[:only_process] == 's3'
+    puts "Processing evidence stored in S3 #{process_script_text}"
+    options[:s3] = true
+  else
+    puts "Processing evidence at #{options[:only_process]} #{process_script_text}"
+  end
+
+  if !no_package_to_analyze
+    if options[:repo]
+      puts "Ignoring repo #{options[:repo]} to analyze"
+      options[:repo] = nil
+    end
+
+    if options[:package]
+      puts "Ignoring package #{options[:package]} to analyze"
+      options[:package] = nil
+    end
   end
 end
 
-inspector = BuildInspector.new(
-  whisperer: whisperer, repo_path: repo_path,
-  is_url: options[:is_url], repo_branch: options[:branch],
-  commands: config.commands, evidence_files: config.evidence_files
-)
 
-whisperer.snapshot
-inspector.inspect
-
-evidence_name = "evidence-#{repo_name}-#{Time.now.strftime('%Y%m%d%H%M%S')}"
-config_name = options[:config]
-collector = EvidenceCollector.new(whisperer: whisperer, evidence_name: evidence_name, config_name: config_name)
-puts Printer.yellowify('Collecting evidence ...')
-collector.collect
-whisperer.rollback if options[:rollback]
-
-processor = EvidenceProcessor.new(evidence_path: evidence_name,
-                                  vagrant_ip: whisperer.ip_address,
-                                  host_whitelist: config.host_whitelist)
-processor.process
-
-end_time = Time.now
-total_time = end_time - start_time
-puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds")
-
-ReportBuilder.build("#{evidence_name}/build-report.html", repo_path, repo_name, options, config, processor, start_time, end_time)
+run_inspector(options, options[:repo])

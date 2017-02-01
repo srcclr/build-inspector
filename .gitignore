@@ -7,3 +7,14 @@ evidence-*.zip
 
 # Ignore local configuration
 config.yml
+
+# Rubymine
+.idea/*
+
+libraries/*
+
+# Ignore any pcap folder for testing
+pcap/*
+
+# Ignore any results files
+*_results.json

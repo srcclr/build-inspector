@@ -17,6 +17,9 @@ limitations under the License.
 require 'resolv'
 require_relative 'build_inspector'
 require_relative 'packet_inspector'
+require_relative 'scripts/build_inspector_script'
+require_relative 'scripts/insecure_network_finder'
+require_relative 'scripts/network_activity_finder'
 
 class EvidenceProcessor
   attr_reader :evidence_path
@@ -83,9 +86,25 @@ class EvidenceProcessor
     print_running_processes
   end
 
+  def process_evidence(script_path, package_manager=nil)
+    if script_path.include? 'insecure_network'
+      i = InsecureNetworkFinder.new(evidence_path: @evidence_path, package_manager: package_manager, host_whitelist: @host_whitelist)
+      puts "Results: #{i.run.to_s.upcase}"
+      return i.run  # returns true/false
+    elsif script_path.include? 'network_activity'
+      i = NetworkActivityFinder.new(evidence_path: @evidence_path, package_manager: package_manager, host_whitelist: @host_whitelist)
+      puts "Results: #{i.run.to_s.upcase}"
+      return i.run  # returns true/false
+    else
+      puts ' [*] Script not found.'
+    end
+
+    false
+  end
+
   def get_unfiltered_processes
     snoopy_path = File.join(@evidence_path, BuildInspector::PROCESSES_FILE)
-    IO.readlines(snoopy_path)
+    IO.readlines(snoopy_path, :encoding => 'ISO-8859-1')
   end
 
   def get_processes
@@ -133,6 +152,31 @@ class EvidenceProcessor
 
     ips_sizes.map { |ip, size| [address_to_name.fetch(ip, ip), ip, size] }
       .find_all { |hostname, ip, size| !(whitelist.include?(hostname) || whitelist.include?(ip)) }
+  end
+
+  def get_insecure_connections
+    pcap_file = File.join(@evidence_path, BuildInspector::PCAP_FILE)
+    packet_inspector = PacketInspector.new(pcap_file)
+    hosts_contacted_via_http = {}
+
+    dns_responses = packet_inspector.dns_responses
+    address_to_name = dns_responses.each_with_object({}) do |name_addresses, memo|
+      name = name_addresses.first
+      addresses = name_addresses.last
+      addresses.each { |address| memo[address.to_s] = name }
+    end
+
+    packet_inspector.http_requests.each do |request, path|
+      if address_to_name.key?(request)
+        (hosts_contacted_via_http[address_to_name[request]] ||= []) << (path if !hosts_contacted_via_http[address_to_name[request]].include?(path))
+      else
+        (hosts_contacted_via_http[request] ||= []) << (path if !hosts_contacted_via_http[address_to_name[request]].include?(path))
+      end
+    end
+
+    hosts_contacted_via_http.map { |host, address|
+      [host, address.compact]
+    }
   end
 
   def get_filesystem_changes

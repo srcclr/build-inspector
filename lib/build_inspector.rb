@@ -32,9 +32,10 @@ class BuildInspector
   PROCESSES_AFTER_FILE = 'ps-after.txt'.freeze
   PROCESSES_FILE = 'snoopy.log'.freeze
 
-  def initialize(whisperer:, repo_path:, is_url:, repo_branch: , commands:, evidence_files: '', verbose: false)
+  def initialize(whisperer:, repo_path:, package:, is_url:, repo_branch: , commands:, evidence_files: '', verbose: false)
     @whisperer = whisperer
     @repo_path = repo_path
+    @package = package
     @is_url = is_url
     @repo_branch = repo_branch
     @commands = Array(commands)
@@ -55,6 +56,8 @@ class BuildInspector
   private
 
   def clone_repo
+    return if @package
+
     if @is_url
       @whisperer.run(message: "Cloning #{@repo_path}:#{@repo_branch} ...") do |commands|
         branch = @repo_branch ? "--branch=#{@repo_branch}" : ''
@@ -105,6 +108,7 @@ class BuildInspector
 
   def build
     @whisperer.run(message: 'Starting build ...') do |commands|
+      # TODO inspecting a directory that's not a git repository will show errors
       commands << "cd #{REPO_PATH}"
       commands << "git submodule init"
       commands.concat(@commands)

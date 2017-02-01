@@ -1,6 +1,7 @@
 ---
 
-commands: gradle build
+commands:
+  - gradle build
 
 # Exclude these hosts and IP addresses from network monitoring
 host_whitelist:

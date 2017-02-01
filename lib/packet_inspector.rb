@@ -16,14 +16,18 @@ limitations under the License.
 
 require 'packetfu'
 require 'resolv'
+require 'webrick'
 
 class PacketInspector
   include PacketFu
 
   DNS_PORT = 53
+  HTTP_PORT = 80
+  HTTPS_PORT = 443
 
   def initialize(pcap_file)
     @packets = PcapFile.read_packets(pcap_file)
+    @req = WEBrick::HTTPRequest.new(WEBrick::Config::HTTP)
   end
 
   def packets_from(src_ip)
@@ -32,9 +36,56 @@ class PacketInspector
     end
   end
 
+  def udp_packets_with_dst_port(port)
+    @packets.find_all do |packet|
+      packet.respond_to?(:udp_dst) && packet.udp_dst == port
+    end
+  end
+
+  def tcp_packets_with_dst_port(port)
+    @packets.find_all do |packet|
+      packet.respond_to?(:tcp_dst) && packet.tcp_dst == port
+    end
+  end
+
   def udp_packets_with_src_port(port)
     @packets.find_all do |packet|
       packet.respond_to?(:udp_src) && packet.udp_src == port
+    end
+  end
+
+  def tcp_packets_with_src_port(port)
+    @packets.find_all do |packet|
+      packet.respond_to?(:tcp_src) && packet.tcp_src == port
+    end
+  end
+
+  def http_requests
+    tcp_packets_with_dst_port(HTTP_PORT).map { |packet|
+      if packet.tcp_header.body != ''
+        path = ''
+        begin
+          @req.parse(StringIO.new(packet.tcp_header.body))
+          path = @req.path
+        rescue
+        end
+        [packet.ip_daddr, path]
+      else
+        [packet.ip_daddr, '']
+      end
+    }
+  end
+
+  def http_responses
+    tcp_packets_with_src_port(HTTP_PORT).map { |packet| packet.ip_saddr }
+  end
+
+  def dns_requests
+    decoded_requests = udp_packets_with_dst_port(DNS_PORT).map { |p| Resolv::DNS::Message.decode(p.payload) }
+
+    decoded_requests.each_with_object({}) do |request, memo|
+      name = request.question.first.first.to_s
+      memo[name] ||= []
     end
   end
 
