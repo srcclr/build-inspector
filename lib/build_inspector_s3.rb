@@ -92,7 +92,7 @@ class BuildInspectorS3
   end
 
   def credentials_not_found
-    return ENV['AWS_ACCESS_KEY_ID'] == nil && ENV['AWS_SECRET_ACCESS_KEY'] == nil && ENV['AWS_PROFILE'] == nil
+    return ENV['AWS_ACCESS_KEY_ID'].nil? && ENV['AWS_SECRET_ACCESS_KEY'].nil? && ENV['AWS_PROFILE'].nil?
   end
 
   def region_name

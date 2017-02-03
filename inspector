@@ -129,22 +129,22 @@ end
 optparse.parse!
 
 
-no_package_to_analyze = (ARGV.size < 1 and options[:package] == nil)
-no_evidence_to_process = options[:only_process] == nil
-no_script_to_run = ((ARGV.size < 1 and options[:script] == nil) or (options[:only_process] == nil and options[:script] == nil))
+no_package_to_analyze = ARGV.size < 1 && options[:package].nil?
+no_evidence_to_process = options[:only_process].nil?
+no_script_to_run = (ARGV.size < 1 && options[:script].nil?) || (options[:only_process].nil? && options[:script].nil?)
 
 
-if no_package_to_analyze and no_evidence_to_process and no_script_to_run
+if no_package_to_analyze && no_evidence_to_process && no_script_to_run
   puts 'Please specify a repository URL or Path; Or an evidence to process; Or a script to run on a/an repo/evidence'
   puts optparse.help
   exit -1
-elsif no_package_to_analyze and no_evidence_to_process and !no_script_to_run
+elsif no_package_to_analyze && no_evidence_to_process && !no_script_to_run
   puts 'Please specify an/a evidence/package/repo to be processed with --process, --package, --url, or <REPO PATH>'
   exit -1
 end
 
 
-if ARGV.size >= 1 and options[:package] != nil
+if ARGV.size >= 1 && !options[:package].nil?
   puts "Package detected, Repo path #{ARGV.first} will be ignored"
 elsif ARGV.size >= 1
   options[:repo] = ARGV.first
