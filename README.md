@@ -5,7 +5,7 @@ Ever wonder what's happening during your builds? Build Inspector monitors networ
 
 ## Requirements
 
-- [Ruby](https://www.ruby-lang.org/en/downloads/) (2.2.3 recommended)
+- [Ruby](https://www.ruby-lang.org/en/downloads/) (2.2.3<= Required)
 - [Vagrant](https://www.vagrantup.com/)
 - [Bundler](http://bundler.io/)
 
@@ -60,7 +60,7 @@ Usage inspector [options] <git repo path>
 ### Gradle Example
 
 ```bash
-./inspector --gradle test-repos/TotallyLegitApp
+./inspector --gradle test-repos/TotallyLegitApp --script=insecure_network_finder
 ```
 
 The above project has a task called `backdoor` that adds a reverse
@@ -87,7 +87,7 @@ network and process activity, file system changes, and any new processes.
 ### Bundler Example
 
 ```bash
-./inspector --gem test-repos/harmless-project
+./inspector --gem test-repos/harmless-project --script=insecure_network_finder
 ```
 
 This bundler project has a gem that pings Google during its
@@ -104,7 +104,7 @@ Hosts contacted:
 ### NPM Example
 
 ```bash
-./inspector --npm test-repos/ann-pee-am
+./inspector --npm test-repos/ann-pee-am --script=insecure_network_finder
 ```
 
 Inspecting this NPM project should yield the following output:
