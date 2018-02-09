@@ -1,6 +1,6 @@
 set -e
 
-mkdir /evidence
+mkdir -p /evidence
 if grep 'vagrant' /etc/passwd
 then
     chown vagrant:vagrant /evidence
@@ -10,7 +10,7 @@ else
 fi
 
 # Generate a snapshot now so it's easier to snapshot before an inspection
-mkdir /backup
+mkdir -p /backup
 rdiff-backup --include-filelist $user_home/filesystem-snapshot.txt / /backup
 chown -R vagrant:vagrant /backup
 
