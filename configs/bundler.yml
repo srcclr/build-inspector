@@ -16,6 +16,7 @@ evidence_files:
     - /backup
     - /dev
     - /evidence
+    - /home/vagrant/.bundle
     - /home/vagrant/.gem
     - /home/vagrant/.rvm
     - /home/vagrant/repo
