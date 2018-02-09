@@ -82,6 +82,7 @@ class EvidenceProcessor
   def process
     print_processes
     print_connections
+    print_insecure_connections
     print_filesystem_changes
     print_running_processes
   end
@@ -222,6 +223,18 @@ class EvidenceProcessor
     connections.each do |hostname, ip, size|
       name_ip = "#{hostname} (#{ip})".ljust(60)
       puts "  #{name_ip} #{prettify(size).rjust(10)}"
+    end
+  end
+
+  def print_insecure_connections
+    insecure_connections = get_insecure_connections
+    return if insecure_connections.empty?
+
+    puts Printer.yellowify('Insecure Connections Made:')
+    insecure_connections.each do |hostname, address|
+      addresses = address.reject(&:empty?).join("\n    ")
+      hostname_address = "#{hostname}\n    #{addresses}".ljust(60)
+      puts "  #{hostname_address}"
     end
   end
 
