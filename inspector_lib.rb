@@ -78,6 +78,8 @@ def only_process(options, vagrant_ip, config, repo_path=nil)
   puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds")
 
   FileUtils.rm_rf(evidence_path, :secure=>true) if should_cleanup
+  puts Printer.yellowify("View the full build report:") unless should_cleanup
+  puts "  ./#{evidence_path}" unless should_cleanup
 end
 
 
@@ -123,7 +125,10 @@ def collect_evidence_and_build_report(options, repo_path=nil, whisperer, config)
 
   end_time = Time.now
   total_time = end_time - start_time
-  puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds")
+  puts Printer.yellowify("[:] Build inspector finished after #{total_time} seconds\n")
 
-  ReportBuilder.build("#{evidence_name}/build-report.html", repo_path, repo_name, options, config, processor, start_time, end_time)
+  build_report_path = "#{evidence_name}/build-report.html"
+  ReportBuilder.build("#{build_report_path}", repo_path, repo_name, options, config, processor, start_time, end_time)
+  puts Printer.yellowify("View the full build report:")
+  puts "  ./#{build_report_path}"
 end
